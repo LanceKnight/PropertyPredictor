@@ -63,7 +63,7 @@ def smiles2graph(smiles, idxfunc=lambda x:x.GetIdx()):
 	# get edge_index
 	A = Chem.rdmolops.GetAdjacencyMatrix(mol) # get adjacency matrix
 	if A is  None:
-		#print(f"Error: cannot get adjacency matrix of SMILES. SMILES:{r}")
+		print(f"Error: cannot get adjacency matrix of SMILES. SMILES:{r}")
 	else:
 		sA = sparse.csr_matrix(A) # convert A from numpy.matrix to scipy sparse matrix
 		edge_index, edge_weight = convert.from_scipy_sparse_matrix(sA) # convert from scipy sparse matrix to edge_index
@@ -71,10 +71,10 @@ def smiles2graph(smiles, idxfunc=lambda x:x.GetIdx()):
 	# get edge_attr
 	for bond in mol.GetBonds():
 		idx = bond.GetIdx()
-		print(f"bond id:{idx}")
+		#print(f"bond id:{idx}")
 		edge_attr[idx] = get_bond_features(bond)
 
-	return x, edge_index, edge_attr
+	return torch.from_numpy(x), edge_index, torch.from_numpy(edge_attr)
 	
 # test
 #line = "[CH2:15]([CH:16]([CH3:17])[CH3:18])[Mg+:19].[CH2:20]1[O:21][CH2:22][CH2:23][CH2:24]1.[Cl-:14].[OH:1][c:2]1[n:3][cH:4][c:5]([C:6](=[O:7])[N:8]([O:9][CH3:10])[CH3:11])[cH:12][cH:13]1>>[OH:1][c:2]1[n:3][cH:4][c:5]([C:6](=[O:7])[CH2:15][CH:16]([CH3:17])[CH3:18])[cH:12][cH:13]1 6-8-0.0;15-6-1.0;15-19-0.0"

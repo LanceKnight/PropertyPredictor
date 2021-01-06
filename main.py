@@ -19,19 +19,19 @@ import numpy as np
 from scipy import sparse
 
 elem_list = ['C', 'N', 'O', 'S', 'F', 'Si', 'P', 'Cl', 'Br', 'Mg', 'Na', 'Ca', 'Fe', 'As', 'Al', 'I', 'B', 'V', 'K', 'Tl', 'Yb', 'Sb', 'Sn', 'Ag', 'Pd', 'Co', 'Se', 'Ti', 'Zn', 'H', 'Li', 'Ge', 'Cu', 'Au', 'Ni', 'Cd', 'In', 'Mn', 'Zr', 'Cr', 'Pt', 'Hg', 'Pb', 'W', 'Ru', 'Nb', 'Re', 'Te', 'Rh', 'Tc', 'Ba', 'Bi', 'Hf', 'Mo', 'U', 'Sm', 'Os', 'Ir', 'Ce','Gd','Ga','Cs', 'unknown']
-atom_fdim = len(elem_list) + 6 + 6 + 6 + 1
-bond_fdim = 6
+atom_feature_dim = len(elem_list) + 6 + 6 + 6 + 1
+bond_feature_dim = 6
 
-def onek_encoding_unk(x, allowable_set):
+def one_hot_encoding(x, allowable_set):
     if x not in allowable_set:
         x = allowable_set[-1]
     return list(map(lambda s: x == s, allowable_set))
 
 def get_atom_features(atom):
-    return np.array(onek_encoding_unk(atom.GetSymbol(), elem_list) 
-            + onek_encoding_unk(atom.GetDegree(), [0,1,2,3,4,5]) 
-            + onek_encoding_unk(atom.GetExplicitValence(), [1,2,3,4,5,6])
-            + onek_encoding_unk(atom.GetImplicitValence(), [0,1,2,3,4,5])
+    return np.array(one_hot_encoding(atom.GetSymbol(), elem_list) 
+            + one_hot_encoding(atom.GetDegree(), [0,1,2,3,4,5]) 
+            + one_hot_encoding(atom.GetExplicitValence(), [1,2,3,4,5,6])
+            + one_hot_encoding(atom.GetImplicitValence(), [0,1,2,3,4,5])
             + [atom.GetIsAromatic()], dtype=np.float32)
 
 def get_bond_features(bond):
@@ -43,13 +43,13 @@ def get_bond_features(bond):
 def smiles2graph(smiles, idxfunc=lambda x:x.GetIdx()):	
 	mol = Chem.MolFromSmiles(smiles)
 	if not mol:
-		print(f"Error: cannot convert SMILES to mol. SMIILES:\n{r}")
+		raise ValueError(f"smiles2graph(smiles, idxfunc=lambda x:x.GetIdx()):smiles cannot be converted to mol, smiles:{smiles}")
 
 	num_atoms = mol.GetNumAtoms()
-	num_bonds = max(mol.GetNumBonds(),1)
-	x = np.zeros((num_atoms, atom_fdim))
-	edge_index = np.zeros((2, num_bonds))
-	edge_attr = np.zeros((num_bonds, bond_fdim))
+	num_bonds = mol.GetNumBonds()
+	x = np.zeros((num_atoms, atom_feature_dim))
+#	edge_index = np.zeros((2, num_bonds))
+	edge_attr = np.zeros((num_bonds, bond_feature_dim))
 
 	# get x
 	for atom in mol.GetAtoms():
@@ -75,17 +75,90 @@ def smiles2graph(smiles, idxfunc=lambda x:x.GetIdx()):
 		edge_attr[idx] = get_bond_features(bond)
 
 	return torch.from_numpy(x), edge_index, torch.from_numpy(edge_attr)
+
+
+#output_processing.py
+
+bond_to_index={0.0: 0, 1:1, 2:2, 3:3, 1.5:4}
+bond_change_set = [0, 1, 2, 3, 1.5]
+bond_label_dim = len(bond_to_index)
+
+def get_bond_label(edge_index, edits):
+	num_edits = len(edits.split(";"))
+
+	y_index = np.zeros((2, 2*num_edits)) # y_index stores graph edges, instead of chemical bonds. one chemical bond counts as two edges, both directions. 
+	y_attr = np.zeros((2*num_edits, bond_label_dim))
+
+	bond_start_atoms = []
+	bond_end_atoms = []
+
+	for i, edit in enumerate(edits.split(";")):
+		print(f"i:{i}, edit:{edit}")
+		a1, a2, bond = edit.split('-')
+		print(f"a1:{a1}, a2:{a2}, bond:{bond}")
+		x = min(int(a1)-1, int(a2)-1)
+		y = max(int(a1)-1, int(a2)-1)
+		z = bond_to_index[float(bond)]
+		bond_start_atoms.append(x)
+		bond_start_atoms.append(y)
+		bond_end_atoms.append(y)
+		bond_end_atoms.append(x)
+		print(f"bond:{float(bond)}")
+		y_attr[i] = one_hot_encoding(z,bond_change_set)
+		y_attr[num_edits+i] = one_hot_encoding(z, bond_change_set)
+
+	y_index[0] = bond_start_atoms
+	y_index[1] = bond_end_atoms
+	return y_index, y_attr
+
+#def get_bond_label(reactant_smiles, edits):
+#	mol = Chem.MolFromSmiles(reactant_smiles)
+#	if not mol:
+#		raise ValueError(f"get_bond_label(reactants_smiles, edits): reactants_smiles cannot be converted to mol, reactant_smiles:{reactant_smiles}")
+#	num_atoms = mol.GetNumAtoms()
+#	num_bonds = mol.GetNumBonds()
+#	y_index = np.zeros((2, pow(num_atoms, 2)))
+#	y_attr = np.zeros((num_bonds, bond_label_dim))
+#
+#	bond_start_atoms = []
+#	bond_end_atoms = []
+#	for edit in edits.split(';'):
+#		a1,a2,bond = edit.split('-')
+#		x = min(int(a1)-1,int(a2)-1)
+#		y = max(int(a1)-1, int(a2)-1)
+#		z = bond_to_index[float(bond)]
+#		bond_start_atoms.append(x)
+#		bond_start_atoms.append(y)
+#		bond_end_atoms.append(y)
+#		bond_end_atoms.append(x)
+#		y_index[0] = bond_start_atoms
+#		y_index[1] = bond_end_end
+#
+#
+#	return y_index, y_attr
+
 	
 # test
 #line = "[CH2:15]([CH:16]([CH3:17])[CH3:18])[Mg+:19].[CH2:20]1[O:21][CH2:22][CH2:23][CH2:24]1.[Cl-:14].[OH:1][c:2]1[n:3][cH:4][c:5]([C:6](=[O:7])[N:8]([O:9][CH3:10])[CH3:11])[cH:12][cH:13]1>>[OH:1][c:2]1[n:3][cH:4][c:5]([C:6](=[O:7])[CH2:15][CH:16]([CH3:17])[CH3:18])[cH:12][cH:13]1 6-8-0.0;15-6-1.0;15-19-0.0"
-line = "CC 6"
+line = "[C:1][C:2]>>[C:1].[C:2] 1-2-0.0"
+line = "[C:1].[C:2]>>[C:1]=[C:2] 1-2-2.0"
+#line = "C 6"
+
+reactions, edits = line.strip("\r\n ").split()
+reactants = reactions.split('>')[0]
+print(f"reactants:\n{reactants}")
+x, edge_index, edge_attr  = smiles2graph(reactants)
+y_index, y_attr = get_bond_label(reactants, edits)
+print(f"x:\n{x}\n\
+		  edge_index:\n\{edge_index}\n\
+		  edge_attr:\n{edge_attr}\n\
+		  y_index:\n{y_index}\
+		  y_attr:\n{y_attr}"\
+		)
 
 
-r, e = line.strip("\r\n ").split()
-react = r.split('>')[0]
-print(f"react:\n{react}")
-x, edge_index, edge_attr = smiles2graph(react)
-print(f"x:\n{x}\nedge_index:\n{edge_index}\nedge_attr:\n{edge_attr}")
+
+
 
 
 # main.py
@@ -100,7 +173,8 @@ def read_data(path):
 	with open(path, 'r') as f:
 		for line in f:
 			r,e = line.strip("\r\n ").split() # get reactants and edits from each line in the input file			
-			#data=Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y = y)
+			react = r.split('>')[0]
+#			data=Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y = y)
 	
 	return 
 	

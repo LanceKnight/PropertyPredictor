@@ -79,37 +79,63 @@ def smiles2graph(smiles, idxfunc=lambda x:x.GetIdx()):
 
 #output_processing.py
 
-bond_to_index={0.0: 0, 1:1, 2:2, 3:3, 1.5:4}
-bond_change_set = [0, 1, 2, 3, 1.5]
-bond_label_dim = len(bond_to_index)
+changed_bond_to_index={0.0: 0, 1:1, 2:2, 3:3, 1.5:4}
+#bond_change_set = [0, 1, 2, 3, 1.5]
+changed_bond_dim = len(changed_bond_to_index)
+INVALID_BOND = -1
+def get_bond_label(reactant_smiles, edits):
+	mol = Chem.MolFromSmiles(reactant_smiles)
+	num_atoms = mol.GetNumAtoms()
+	changed_bond_map = np.zeros((num_atoms, num_atoms, changed_bond_dim))
 
-def get_bond_label(edge_index, edits):
-	num_edits = len(edits.split(";"))
-
-	y_index = np.zeros((2, 2*num_edits)) # y_index stores graph edges, instead of chemical bonds. one chemical bond counts as two edges, both directions. 
-	y_attr = np.zeros((2*num_edits, bond_label_dim))
-
-	bond_start_atoms = []
-	bond_end_atoms = []
-
-	for i, edit in enumerate(edits.split(";")):
-		print(f"i:{i}, edit:{edit}")
-		a1, a2, bond = edit.split('-')
-		print(f"a1:{a1}, a2:{a2}, bond:{bond}")
-		x = min(int(a1)-1, int(a2)-1)
+	#create a tensor that store (atom1, atom2, changed_bond_type)
+	for s in edits.split(';'):
+		a1,a2,bo = s.split('-')
+		x = min(int(a1)-1,int(a2)-1)
 		y = max(int(a1)-1, int(a2)-1)
-		z = bond_to_index[float(bond)]
-		bond_start_atoms.append(x)
-		bond_start_atoms.append(y)
-		bond_end_atoms.append(y)
-		bond_end_atoms.append(x)
-		print(f"bond:{float(bond)}")
-		y_attr[i] = one_hot_encoding(z,bond_change_set)
-		y_attr[num_edits+i] = one_hot_encoding(z, bond_change_set)
+		z = changed_bond_to_index[float(bo)]
+		changed_bond_map[x,y,z] = changed_bond_map[y,x,z] = 1
 
-	y_index[0] = bond_start_atoms
-	y_index[1] = bond_end_atoms
-	return y_index, y_attr
+	#flatten changed_bond_map to an array
+	labels = []
+	for i in range(num_atoms):
+		for j in range(num_atoms):
+			for k in range(len(changed_bond_to_index)):
+				if i == j:
+					labels.append(INVALID_BOND) # mask
+				else:
+					labels.append(changed_bond_map[i,j,k])
+	return np.array(labels)
+
+
+#def get_bond_label(edge_index, edits):
+#	num_edits = len(edits.split(";"))
+#
+#	y_index = np.zeros((2, 2*num_edits)) # y_index stores graph edges, instead of chemical bonds. one chemical bond counts as two edges, both directions. 
+#	y_attr = np.zeros((2*num_edits, bond_label_dim))
+#
+#	bond_start_atoms = []
+#	bond_end_atoms = []
+#
+#	for i, edit in enumerate(edits.split(";")):
+#		print(f"i:{i}, edit:{edit}")
+#		a1, a2, bond = edit.split('-')
+#		print(f"a1:{a1}, a2:{a2}, bond:{bond}")
+#		x = min(int(a1)-1, int(a2)-1)
+#		y = max(int(a1)-1, int(a2)-1)
+#		z = changed_bond_to_index[float(bond)]
+#		bond_start_atoms.append(x)
+#		bond_start_atoms.append(y)
+#		bond_end_atoms.append(y)
+#		bond_end_atoms.append(x)
+#		print(f"bond:{float(bond)}")
+#		y_attr[i] = one_hot_encoding(z,bond_change_set)
+#		y_attr[num_edits+i] = one_hot_encoding(z, bond_change_set)
+#
+#	y_index[0] = bond_start_atoms
+#	y_index[1] = bond_end_atoms
+#	return y_index, y_attr
+
 
 #def get_bond_label(reactant_smiles, edits):
 #	mol = Chem.MolFromSmiles(reactant_smiles)
@@ -126,7 +152,7 @@ def get_bond_label(edge_index, edits):
 #		a1,a2,bond = edit.split('-')
 #		x = min(int(a1)-1,int(a2)-1)
 #		y = max(int(a1)-1, int(a2)-1)
-#		z = bond_to_index[float(bond)]
+#		z = changed_bond_to_index[float(bond)]
 #		bond_start_atoms.append(x)
 #		bond_start_atoms.append(y)
 #		bond_end_atoms.append(y)
@@ -148,17 +174,59 @@ reactions, edits = line.strip("\r\n ").split()
 reactants = reactions.split('>')[0]
 print(f"reactants:\n{reactants}")
 x, edge_index, edge_attr  = smiles2graph(reactants)
-y_index, y_attr = get_bond_label(reactants, edits)
+y_index = get_bond_label(reactants, edits)
 print(f"x:\n{x}\n\
 		  edge_index:\n\{edge_index}\n\
 		  edge_attr:\n{edge_attr}\n\
-		  y_index:\n{y_index}\
-		  y_attr:\n{y_attr}"\
+		  y_index:\n{y_index}"\
+		 # y_attr:\n{y_attr}"\
 		)
 
+#nn.py
+from torch.nn import Linear
+from torch_geometric.nn import MessagePassing
+
+class WLconv(MessagePassing):
+	def __init__(self, x_size_edge_size, hidden_size):
+		super(WLNconv, self).__init__(aggr='add')
+		self.self_lin = Linear(x_size, hidden_size)
+		self.edge_lin = Linear(edge_size, hidden_size)
+		self.update_lin = Linear(x_size + edge_size, hidden_size)
+			
+	def forward(self, x, edge_index, edge_attr):
+		neighbor_hidden = self.propagate(edge_index, x=x, edge_attr = edge_attr)		
+		self_hidden = self.self_lin(x)
+		out = neighbor_hidden * self_hidden
+		return out
+	def message(self, x_j, edge_attr):
+		neighbor_atoms = self.self_lin(x_j)
+		neighbor_bonds = self.edge_lin(edge_attr)
+		neighbor = neighbor_atoms * neighbor_bonds
+		return neighbor
+	def update(self):
+		local_neighbor= torch.cat((x_j, edge_attr), dim = -1)
+		neighbor_labels = self.update_lin(local_neighbor).relu()
+		new_label = torch.sum(neighbor_labels, 0)
+		new_label = self.lin(new_label)
+		return new_label.rulu()
+		
 
 
-
+#model.py
+import torch
+from torch.nn import Linear
+import torch.nn.functional as F
+class WLN(torch.nn.Module):
+	def __init__(self, input_size, edge_size, hidden_size, depth):
+		super(WLN, self).__init__()       
+		self.lin = Linear(input_size, hidden_size)
+		self.WLconv = WLNconv(input_size, edge_size,  hidden_size)
+	def forward(self, x, edge_index, edge_attr):
+		x = self.lin(x)
+		x = x.relu()
+		for i in range(depth):
+			x = self.WLNconv(x, edge_index, edge_attr)
+		return x
 
 
 # main.py
@@ -168,23 +236,42 @@ processed_data = "./data/USPTO/processed_training_data.pt"
 
 batch_size = 20
 
-def read_data(path):	
-	rex_list, edit_list = [],[]
-	with open(path, 'r') as f:
-		for line in f:
-			r,e = line.strip("\r\n ").split() # get reactants and edits from each line in the input file			
-			react = r.split('>')[0]
-#			data=Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y = y)
-	
-	return 
-	
+#model = MLP(hidden_channels=16)
+#criterion = torch.nn.CrossEntropyLoss()
+#optimizer = torch.optim.Adam(model.parameters(), lr = 0.01, weight_decay = 5e-4)
 
-def count(s):
-    c = 0
-    for i in range(len(s)):
-        if s[i] == ':':
-            c += 1
-    return c
+def train():
+      model.train()
+      optimizer.zero_grad()  # Clear gradients.
+      out = model(data.x)  # Perform a single forward pass.
+      loss = criterion(out[data.train_mask], data.y[data.train_mask])  # Compute the loss solely based on the training nodes.
+      loss.backward()  # Derive gradients.
+      optimizer.step()  # Update parameters based on gradients.
+      return loss
+
+
+
+#def read_data(path):	
+#	rex_list, edit_list = [],[]
+#	with open(path, 'r') as f:
+#		for line in f:
+#			r,e = line.strip("\r\n ").split() # get reactants and edits from each line in the input file			
+#			react = r.split('>')[0]
+##			data=Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y = y)
+#	
+#	return 
+#	
+#
+#def count(s):
+#    c = 0
+#    for i in range(len(s)):
+#        if s[i] == ':':
+#            c += 1
+#    return c
+
+
+
+
 
 # load data
 #bucket_size = [10,20,30,40,50,60,80,100,120,150]

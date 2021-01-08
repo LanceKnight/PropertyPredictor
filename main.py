@@ -1,6 +1,5 @@
 import torch
 import random
-from torch_geometric.data import InMemoryDataset
 from torch_geometric.data import Data
 
 
@@ -230,13 +229,46 @@ class WLN(torch.nn.Module):
 
 
 # main.py
+from torch_geometric.data import InMemoryDataset
 
-raw_data = "./data/USPTO/trim_train.txt.proc"#"./data/USPTO/train.txt.proc"
-processed_data = "./data/USPTO/processed_training_data.pt"
+raw_data = "./data/raw/USPTO/trim_train.txt.proc"#"./data/USPTO/train.txt.proc"
+processed_data = "data.pt"
 
 batch_size = 20
 
-#model = MLP(hidden_channels=16)
+class RexDataset(InMemoryDataset):
+	def __init__(self, root, input_file, transform=None, pre_transform=None):
+		self.input_file = input_file
+		super(RexDataset, self).__init__(root, transform, pre_transform)		
+		self.data, self.slices = torch.load(self.processed_paths[0])
+		self.a = 1
+	@property
+	def raw_file_names(self):
+		return ['train.txt.proc']
+
+	@property
+	def processed_file_names(self):
+		return [processed_data]
+
+	def download(self):
+		pass
+		
+	def process(self):	
+		data_list = []
+		#print(f"a:{self.a}")
+		with open(self.input_file, 'r') as f:
+			for line in f:
+				r,e = line.strip("\r\n ").split() # get reactants and edits from each line in the input file			
+				react = r.split('>')[0]
+				x, edge_index, edge_attr = smiles2graph(react, idxfunc = lambda x:x.GetIntProp('molAtomMapNumber')-1)	
+				y = get_bond_label(react, e)
+				one_data_point = Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y = y)
+				data_list.append(one_data_point)
+		data, slices = self.collate(data_list)
+		torch.save((data, slices),self.processed_paths[0])
+
+data = RexDataset("./data/my_data", raw_data)
+#model = WLN(hidden_channels=100)
 #criterion = torch.nn.CrossEntropyLoss()
 #optimizer = torch.optim.Adam(model.parameters(), lr = 0.01, weight_decay = 5e-4)
 
@@ -309,23 +341,3 @@ def train():
 
 
 
-#class RexDatabase(InMemoryDataset):
-#	def __init__(self, root, transform=None, pre_transform=None):
-#		super(InMemoryDataset, self).__init__(root, transform, pre_transform)
-#		self.data, self.slices = torch.load(self.processed_path[0])
-#
-#	@property
-#	def raw_dir(self):
-#		return [raw_data]
-#
-#	@property
-#	def processeed_dir(self):
-#		return [processed_data]
-#
-#	
-#	def process(self):
-#
-#
-#   	A = SMILES2Adjacency(product_smile) # get adjacency matrix of the product, in numpy.matrix	
-#
-#		torch.save((self.data, self.slices),self.process_path[0])

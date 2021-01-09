@@ -196,12 +196,10 @@ from torch_geometric.nn import MessagePassing
 #print(f"lin(x):{lin(x).dtype}")
 
 class WL_update_conv(MessagePassing):
-	def __init__(self, num_features, num_edge_attr, hidden_size): #x_size may not be used
+	def __init__(self, num_edge_attr, hidden_size): #x_size may not be used
 		super(WL_update_conv, self).__init__(aggr='add')
-		#self.self_lin = Linear(hidden_size, hidden_size).float()
-		#self.edge_lin = Linear(edge_attr_size, hidden_size).float()
-		self.lin1 = Linear(hidden_size + num_edge_attr, hidden_size).float()
-		self.lin2 = Linear(2*hidden_size, hidden_size).float()
+		self.lin1 = Linear(hidden_size + num_edge_attr, hidden_size)
+		self.lin2 = Linear(2*hidden_size, hidden_size)
 			
 	def forward(self, x, edge_index, edge_attr):
 		print(f"WLconv-x.shape:{x.shape}")
@@ -213,40 +211,51 @@ class WL_update_conv(MessagePassing):
 		new_label= self.lin2( torch.cat((neighbor_sum, x), dim = 1) ).relu()
 		
 		return new_label
-	#def message(self, x_j, edge_attr):
-	#	print(f"WLconv-message-x_j.shape:{x_j.shape}")
-	#	print(f"WLconv-message-edge_attr:{edge_attr.shape}")
-	#	neighbor_atoms = self.self_lin(x_j)
-	#	print(f"WLconv-message-neighbor_atoms.shape: {neighbor_atoms.shape}")
-	#	neighbor_bonds = self.edge_lin(edge_attr)
-	#	print(f"WLconv-message-neighbor_bonds.shape: {neighbor_bonds.shape}")
-	#	neighbor = neighbor_atoms * neighbor_bonds
-	#	print("here2")
-	#	return neighbor
 	def message(self, x_i, x_j, edge_attr):
 		print(f"WLconv-message-x_j.shape:{x_j.shape}")
 		print(f"WLconv-message-edge_attr:{edge_attr.shape}")
 		neighbor_hidden= self.lin1(torch.cat((x_j, edge_attr), dim = 1)).relu()
 		print(f"WLconv-message-neibor_hidden:{neighbor_hidden.shape}")
-	#	neighbor_sum = torch.sum(neighbor_hidden, dim = 0)
-	#	print(f"neighbor_sum.shape:{neighbor_sum.shape}")
-	#	print(f"x_i.shape:{x_i.shape}")
-	#	t = torch.cat((neighbor_sum, x_i))
-	#	print(f"cat.shape:{t}")
-	#	new_label = self.lin2(t).relu()
 		return neighbor_hidden
 		
 
+class WL_output_conv(MessagePassing):
+	def __init__(self, edge_attr_dim, hidden_size): #x_size may not be used
+		super(WL_output_conv, self).__init__(aggr='add')
+		self.lin2 = Linear(edge_attr_dim, hidden_size)
+		self.lin3 = Linear(hidden_size, hidden_size)
+			
+	def forward(self, x, edge_index, edge_attr):
+		print(f"WLconv-x.shape:{x.shape}")
+		print(f"WLconv-edge_index.shape:{edge_index.shape}")
+		print(f"WLconv-edge_index:edge_attr.shape:{edge_attr.shape}")
+		neighbor_sum = self.propagate(edge_index, x=x, edge_attr = edge_attr)
+		print(f"neighbor_sum.shape:{neighbor_sum.shape}")
+		print(f"x.shape:{x.shape}")
+		out = self.lin3( neighbor_sum * x )
+		return out
+
+	def message(self, x_j, edge_attr):
+		print(f"WLconv-message-x_j.shape:{x_j.shape}")
+		print(f"WLconv-message-edge_attr:{edge_attr.shape}")
+		neighbor_atoms = self.lin3(x_j)
+		print(f"WLconv-message-neighbor_atoms.shape: {neighbor_atoms.shape}")
+		neighbor_bonds = self.lin2(edge_attr)
+		print(f"WLconv-message-neighbor_bonds.shape: {neighbor_bonds.shape}")
+		neighbor = neighbor_atoms * neighbor_bonds
+		print("here2")
+		return neighbor
 
 #model.py
 import torch
 from torch.nn import Linear
 import torch.nn.functional as F
 class WLN(torch.nn.Module):
-	def __init__(self, input_size, edge_attr_size, hidden_size, depth):
+	def __init__(self, node_feature_dim, edge_attr_dim, hidden_size, depth):
 		super(WLN, self).__init__()       
-		self.lin = Linear(input_size, hidden_size, bias = False).float()
-		self.WLconv1 = WL_update_conv(input_size, edge_attr_size,  hidden_size).float()
+		self.lin = Linear(node_feature_dim, hidden_size, bias = False)
+		self.WLconv1 = WL_update_conv(edge_attr_dim,  hidden_size)
+		self.WLconv2 = WL_output_conv(edge_attr_dim, hidden_size)
 	def forward(self, x, edge_index, edge_attr):
 		print(f"x.dtype:{x.dtype}")
 		for param in self.lin.parameters():
@@ -255,10 +264,11 @@ class WLN(torch.nn.Module):
 		x = x.relu()
 		print(f"WLN-x.shape:{x.shape}")
 		for i in range(depth):
-			x = self.WLconv1(x, edge_index, edge_attr)
-
+			x = self.WLconv1(x, edge_index, edge_attr)	
 		
-		return x
+		out = self.WLconv2(x, edge_index, edge_attr)
+
+		return out
 
 
 

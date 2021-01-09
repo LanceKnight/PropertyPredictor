@@ -48,7 +48,7 @@ def smiles2graph(smiles, idxfunc=lambda x:x.GetIdx()):
 	num_bonds = mol.GetNumBonds()
 	x = np.zeros((num_atoms, atom_feature_dim))
 #	edge_index = np.zeros((2, num_bonds))
-	edge_attr = np.zeros((num_bonds, bond_feature_dim))
+	edge_attr = np.zeros((2*num_bonds, bond_feature_dim)) # in PyG, one bond is treated as two edges for both directions.
 
 	# get x
 	for atom in mol.GetAtoms():
@@ -71,9 +71,8 @@ def smiles2graph(smiles, idxfunc=lambda x:x.GetIdx()):
 	for bond in mol.GetBonds():
 		idx = bond.GetIdx()
 		#print(f"bond id:{idx}")
-		edge_attr[idx] = get_bond_features(bond)
-
-	return torch.from_numpy(x), edge_index, torch.from_numpy(edge_attr)
+		edge_attr[idx] = edge_attr[num_bonds+idx] = get_bond_features(bond)
+	return torch.from_numpy(x).float(), edge_index, torch.from_numpy(edge_attr).float()
 
 
 #output_processing.py
@@ -175,9 +174,9 @@ print(f"reactants:\n{reactants}")
 x, edge_index, edge_attr  = smiles2graph(reactants)
 y_index = get_bond_label(reactants, edits)
 print(f"x:\n{x}\n\
-		  edge_index:\n\{edge_index}\n\
+		  edge_index:\n{edge_index}\n\
 		  edge_attr:\n{edge_attr}\n\
-		  y_index:\n{y_index}"\
+		  y_index:\n{y_index}"
 		 # y_attr:\n{y_attr}"\
 		)
 
@@ -185,29 +184,57 @@ print(f"x:\n{x}\n\
 from torch.nn import Linear
 from torch_geometric.nn import MessagePassing
 
-class WLconv(MessagePassing):
-	def __init__(self, x_size_edge_size, hidden_size):
-		super(WLNconv, self).__init__(aggr='add')
-		self.self_lin = Linear(x_size, hidden_size)
-		self.edge_lin = Linear(edge_size, hidden_size)
-		self.update_lin = Linear(x_size + edge_size, hidden_size)
+#class TestConv(MessagePassing):
+#	def __init__(self, in_size, out_size):
+#		super(TestConv, self).__init__(aggr='add')
+#		self.lin = Linear(in_size, out_size)
+#
+#test_conv = TestConv(10, 100)
+#print(f"test_conv:{test_conv}")
+
+#lin = Linear(82, 15).float()
+#print(f"lin(x):{lin(x).dtype}")
+
+class WL_update_conv(MessagePassing):
+	def __init__(self, num_features, num_edge_attr, hidden_size): #x_size may not be used
+		super(WL_update_conv, self).__init__(aggr='add')
+		#self.self_lin = Linear(hidden_size, hidden_size).float()
+		#self.edge_lin = Linear(edge_attr_size, hidden_size).float()
+		self.lin1 = Linear(hidden_size + num_edge_attr, hidden_size).float()
+		self.lin2 = Linear(2*hidden_size, hidden_size).float()
 			
 	def forward(self, x, edge_index, edge_attr):
-		neighbor_hidden = self.propagate(edge_index, x=x, edge_attr = edge_attr)		
-		self_hidden = self.self_lin(x)
-		out = neighbor_hidden * self_hidden
-		return out
-	def message(self, x_j, edge_attr):
-		neighbor_atoms = self.self_lin(x_j)
-		neighbor_bonds = self.edge_lin(edge_attr)
-		neighbor = neighbor_atoms * neighbor_bonds
-		return neighbor
-	def update(self):
-		local_neighbor= torch.cat((x_j, edge_attr), dim = -1)
-		neighbor_labels = self.update_lin(local_neighbor).relu()
-		new_label = torch.sum(neighbor_labels, 0)
-		new_label = self.lin(new_label)
-		return new_label.rulu()
+		print(f"WLconv-x.shape:{x.shape}")
+		print(f"WLconv-edge_index.shape:{edge_index.shape}")
+		print(f"WLconv-edge_index:edge_attr.shape:{edge_attr.shape}")
+		neighbor_sum = self.propagate(edge_index, x=x, edge_attr = edge_attr)
+		print(f"neighbor_sum.shape:{neighbor_sum.shape}")
+		print(f"x.shape:{x.shape}")
+		new_label= self.lin2( torch.cat((neighbor_sum, x), dim = 1) ).relu()
+		
+		return new_label
+	#def message(self, x_j, edge_attr):
+	#	print(f"WLconv-message-x_j.shape:{x_j.shape}")
+	#	print(f"WLconv-message-edge_attr:{edge_attr.shape}")
+	#	neighbor_atoms = self.self_lin(x_j)
+	#	print(f"WLconv-message-neighbor_atoms.shape: {neighbor_atoms.shape}")
+	#	neighbor_bonds = self.edge_lin(edge_attr)
+	#	print(f"WLconv-message-neighbor_bonds.shape: {neighbor_bonds.shape}")
+	#	neighbor = neighbor_atoms * neighbor_bonds
+	#	print("here2")
+	#	return neighbor
+	def message(self, x_i, x_j, edge_attr):
+		print(f"WLconv-message-x_j.shape:{x_j.shape}")
+		print(f"WLconv-message-edge_attr:{edge_attr.shape}")
+		neighbor_hidden= self.lin1(torch.cat((x_j, edge_attr), dim = 1)).relu()
+		print(f"WLconv-message-neibor_hidden:{neighbor_hidden.shape}")
+	#	neighbor_sum = torch.sum(neighbor_hidden, dim = 0)
+	#	print(f"neighbor_sum.shape:{neighbor_sum.shape}")
+	#	print(f"x_i.shape:{x_i.shape}")
+	#	t = torch.cat((neighbor_sum, x_i))
+	#	print(f"cat.shape:{t}")
+	#	new_label = self.lin2(t).relu()
+		return neighbor_hidden
 		
 
 
@@ -216,25 +243,33 @@ import torch
 from torch.nn import Linear
 import torch.nn.functional as F
 class WLN(torch.nn.Module):
-	def __init__(self, input_size, edge_size, hidden_size, depth):
+	def __init__(self, input_size, edge_attr_size, hidden_size, depth):
 		super(WLN, self).__init__()       
-		self.lin = Linear(input_size, hidden_size)
-		self.WLconv = WLNconv(input_size, edge_size,  hidden_size)
+		self.lin = Linear(input_size, hidden_size, bias = False).float()
+		self.WLconv1 = WL_update_conv(input_size, edge_attr_size,  hidden_size).float()
 	def forward(self, x, edge_index, edge_attr):
+		print(f"x.dtype:{x.dtype}")
+		for param in self.lin.parameters():
+			print(f"self.lin:{param}")
 		x = self.lin(x)
 		x = x.relu()
+		print(f"WLN-x.shape:{x.shape}")
 		for i in range(depth):
-			x = self.WLNconv(x, edge_index, edge_attr)
+			x = self.WLconv1(x, edge_index, edge_attr)
+
+		
 		return x
+
 
 
 # main.py
 from torch_geometric.data import InMemoryDataset
+from torch_geometric.data import DataLoader
 
 raw_data = "./data/raw/USPTO/trim_train.txt.proc"#"./data/USPTO/train.txt.proc"
 processed_data = "data.pt"
 
-batch_size = 20
+batch_size = 1
 
 class RexDataset(InMemoryDataset):
 	def __init__(self, root, input_file, transform=None, pre_transform=None):
@@ -261,26 +296,39 @@ class RexDataset(InMemoryDataset):
 				r,e = line.strip("\r\n ").split() # get reactants and edits from each line in the input file			
 				react = r.split('>')[0]
 				x, edge_index, edge_attr = smiles2graph(react, idxfunc = lambda x:x.GetIntProp('molAtomMapNumber')-1)	
+				#print(f"process:x: {x.dtype}")
 				y = get_bond_label(react, e)
 				one_data_point = Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y = y)
 				data_list.append(one_data_point)
 		data, slices = self.collate(data_list)
 		torch.save((data, slices),self.processed_paths[0])
 
-data = RexDataset("./data/my_data", raw_data)
-#model = WLN(hidden_channels=100)
-#criterion = torch.nn.CrossEntropyLoss()
-#optimizer = torch.optim.Adam(model.parameters(), lr = 0.01, weight_decay = 5e-4)
 
-def train():
-      model.train()
-      optimizer.zero_grad()  # Clear gradients.
-      out = model(data.x)  # Perform a single forward pass.
-      loss = criterion(out[data.train_mask], data.y[data.train_mask])  # Compute the loss solely based on the training nodes.
-      loss.backward()  # Derive gradients.
-      optimizer.step()  # Update parameters based on gradients.
-      return loss
 
+train_data = RexDataset("./data/my_data", raw_data)
+print(f"first data point:{train_data[0]}")
+train_data = train_data[:100]
+train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False)
+hidden_channels = 100
+depth = 1
+
+print(f"num_features:{train_data.num_features}      num_edge_features:{train_data.num_edge_features}                hidden_channels:{hidden_channels}")
+model = WLN(train_data.num_features, train_data.num_edge_features, hidden_channels, depth).float()
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr = 0.01, weight_decay = 5e-4)
+
+
+def train(data_loader):
+	model.train()
+	optimizer.zero_grad()  # Clear gradients.
+	for data in data_loader:
+		out = model(data.x, data.edge_index, data.edge_attr)  # Perform a single forward pass.
+		loss = criterion(out, data.y)  # Compute the loss solely based on the training nodes.
+		loss.backward()  # Derive gradients.
+		optimizer.step()  # Update parameters based on gradients.
+	return loss
+
+train(train_loader)
 
 
 #def read_data(path):	

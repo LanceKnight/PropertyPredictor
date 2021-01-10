@@ -103,7 +103,7 @@ def get_bond_label(reactant_smiles, edits):
 					labels.append(INVALID_BOND) # mask
 				else:
 					labels.append(changed_bond_map[i,j,k])
-	return np.array(labels)
+	return torch.tensor(labels)
 
 
 #def get_bond_label(edge_index, edits):
@@ -184,17 +184,6 @@ print(f"x:\n{x}\n\
 from torch.nn import Linear
 from torch_geometric.nn import MessagePassing
 
-#class TestConv(MessagePassing):
-#	def __init__(self, in_size, out_size):
-#		super(TestConv, self).__init__(aggr='add')
-#		self.lin = Linear(in_size, out_size)
-#
-#test_conv = TestConv(10, 100)
-#print(f"test_conv:{test_conv}")
-
-#lin = Linear(82, 15).float()
-#print(f"lin(x):{lin(x).dtype}")
-
 class WL_update_conv(MessagePassing):
 	def __init__(self, num_edge_attr, hidden_size): #x_size may not be used
 		super(WL_update_conv, self).__init__(aggr='add')
@@ -249,13 +238,40 @@ class WL_output_conv(MessagePassing):
 #model.py
 import torch
 from torch.nn import Linear
-import torch.nn.functional as F
-class WLN(torch.nn.Module):
-	def __init__(self, node_feature_dim, edge_attr_dim, hidden_size, depth):
-		super(WLN, self).__init__()       
+#import torch.nn.functional as F
+from torch_geometric.nn import GATConv 
+class GAT_WLN(torch.nn.Module):
+	def __init__(self, node_feature_dim, edge_attr_dim, hidden_size, changed_bond_dim, depth):
+		super(GAT_WLN, self).__init__()       
 		self.lin = Linear(node_feature_dim, hidden_size, bias = False)
+		self.lin2 = Linear(hidden_size, hidden_size, bias = False)
 		self.WLconv1 = WL_update_conv(edge_attr_dim,  hidden_size)
 		self.WLconv2 = WL_output_conv(edge_attr_dim, hidden_size)
+		self.GATconv = GATConv(hidden_size, hidden_size)
+
+	def get_output(self, local_features, global_features, changed_bond_dim):		
+		num_atoms = local_features.shape[0]
+		predicted_changed_bond_map = np.zeros((num_atoms, num_atoms, changed_bond_dim))
+
+		#create a tensor that store (atom1, atom2, changed_bond_type)
+		for x in range(num_atoms):
+			for y in range(num_atoms):
+				for z in range(changed_bond_dim):
+					paired_local_features = self.lin2(local_features[x] + local_features[y])
+					paired_global_features = self.lin2(global_features[x] + global_features[y])
+					predicted_changed_bond_map[x,y,z] = predicted_changed_bond_map[y,x,z] = 1
+
+		#flatten changed_bond_map to an array
+		reactivity_scores = []
+		for i in range(num_atoms):
+			for j in range(num_atoms):
+				for k in range(changed_bond_dim):
+					if i == j:
+						reactivity_scores.append(INVALID_BOND) # mask
+					else:
+						reactivity_scores.append(predicted_changed_bond_map[i,j,k])
+		return torch.tensor(reactivity_scores)
+
 	def forward(self, x, edge_index, edge_attr):
 		print(f"x.dtype:{x.dtype}")
 		for param in self.lin.parameters():
@@ -265,12 +281,13 @@ class WLN(torch.nn.Module):
 		print(f"WLN-x.shape:{x.shape}")
 		for i in range(depth):
 			x = self.WLconv1(x, edge_index, edge_attr)	
-		
-		out = self.WLconv2(x, edge_index, edge_attr)
-
+	
+		local_features = self.WLconv2(x, edge_index, edge_attr)
+		global_features = self.GATconv(x, edge_index)
+		print(f"local_features.shape:{local_features.shape}          global_feature.shape:{global_features.shape}")
+	
+		out = self.get_output(local_features, global_features, changed_bond_dim)
 		return out
-
-
 
 # main.py
 from torch_geometric.data import InMemoryDataset
@@ -323,7 +340,7 @@ hidden_channels = 100
 depth = 1
 
 print(f"num_features:{train_data.num_features}      num_edge_features:{train_data.num_edge_features}                hidden_channels:{hidden_channels}")
-model = WLN(train_data.num_features, train_data.num_edge_features, hidden_channels, depth).float()
+model = GAT_WLN(train_data.num_features, train_data.num_edge_features, hidden_channels, changed_bond_dim, depth).float()
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr = 0.01, weight_decay = 5e-4)
 
@@ -333,68 +350,13 @@ def train(data_loader):
 	optimizer.zero_grad()  # Clear gradients.
 	for data in data_loader:
 		out = model(data.x, data.edge_index, data.edge_attr)  # Perform a single forward pass.
+		print(f"out: {out.shape}         data.y:{data.y.shape}")
 		loss = criterion(out, data.y)  # Compute the loss solely based on the training nodes.
 		loss.backward()  # Derive gradients.
 		optimizer.step()  # Update parameters based on gradients.
 	return loss
 
 train(train_loader)
-
-
-#def read_data(path):	
-#	rex_list, edit_list = [],[]
-#	with open(path, 'r') as f:
-#		for line in f:
-#			r,e = line.strip("\r\n ").split() # get reactants and edits from each line in the input file			
-#			react = r.split('>')[0]
-##			data=Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y = y)
-#	
-#	return 
-#	
-#
-#def count(s):
-#    c = 0
-#    for i in range(len(s)):
-#        if s[i] == ':':
-#            c += 1
-#    return c
-
-
-
-
-
-# load data
-#bucket_size = [10,20,30,40,50,60,80,100,120,150]
-#buckets = [[] for i in range(len(bucket_size))]
-#
-#
-#for i in range(len(buckets)):
-#	random.shuffle(buckets[i])
-#
-#head = [0]*len(buckets)
-#print(f"head:{head}")
-##print(f"buckets:{buckets}")
-#avil_buckets = [i for i in range(len(buckets)) if len(buckets[i]) > 0]
-#print(f"avil_buckets:{avil_buckets}")
-#
-#src_batch, edit_batch=[],[]
-#bid = random.choice(avil_buckets)
-#print(f"bid:{bid}")
-#bucket= buckets[bid]
-#it=head[bid]
-#print(f"it:{it}")
-#data_len=len(bucket)
-#print(f"data_len:{data_len}")
-#for i in range(batch_size):
-#	react = bucket[it][0].split('>')[0]
-#	#print(f"react:{react},bucket[it]:{bucket[it]}")
-#	src_batch.append(react)
-#	edits=bucket[it][1]
-#	edit_batch.append(edits)
-#	print(f"before it:{it}")
-#	it=(it+1) % data_len
-#	print(f"after it:{it}")
-#head[bid]=it
 
 
 

@@ -84,26 +84,26 @@ INVALID_BOND = -1
 def get_bond_label(reactant_smiles, edits):
 	mol = Chem.MolFromSmiles(reactant_smiles)
 	num_atoms = mol.GetNumAtoms()
-	changed_bond_map = np.zeros((num_atoms, num_atoms, changed_bond_dim))
+	changed_bond_map = np.zeros((num_atoms, num_atoms))
 
 	#create a tensor that store (atom1, atom2, changed_bond_type)
 	for s in edits.split(';'):
-		a1,a2,bo = s.split('-')
+		a1,a2,bond = s.split('-')
 		x = min(int(a1)-1,int(a2)-1)
 		y = max(int(a1)-1, int(a2)-1)
-		z = changed_bond_to_index[float(bo)]
-		changed_bond_map[x,y,z] = changed_bond_map[y,x,z] = 1
+		#z = changed_bond_to_index[float(bo)]
+		changed_bond_map[x,y] = changed_bond_map[y,x] = changed_bond_to_index[float(bond)]
 
 	#flatten changed_bond_map to an array
 	labels = []
 	for i in range(num_atoms):
 		for j in range(num_atoms):
-			for k in range(len(changed_bond_to_index)):
-				if i == j:
-					labels.append(INVALID_BOND) # mask
-				else:
-					labels.append(changed_bond_map[i,j,k])
-	return torch.tensor(labels)
+		#	for k in range(len(changed_bond_to_index)):
+			if i == j:
+				labels.append(INVALID_BOND) # mask
+			else:
+				labels.append(changed_bond_map[i,j])
+	return torch.tensor(labels, dtype = torch.long)
 
 
 #def get_bond_label(edge_index, edits):
@@ -191,20 +191,20 @@ class WL_update_conv(MessagePassing):
 		self.lin2 = Linear(2*hidden_size, hidden_size)
 			
 	def forward(self, x, edge_index, edge_attr):
-		print(f"WLconv-x.shape:{x.shape}")
-		print(f"WLconv-edge_index.shape:{edge_index.shape}")
-		print(f"WLconv-edge_index:edge_attr.shape:{edge_attr.shape}")
+		#print(f"WLconv-x.shape:{x.shape}")
+		#print(f"WLconv-edge_index.shape:{edge_index.shape}")
+		#print(f"WLconv-edge_index:edge_attr.shape:{edge_attr.shape}")
 		neighbor_sum = self.propagate(edge_index, x=x, edge_attr = edge_attr)
-		print(f"neighbor_sum.shape:{neighbor_sum.shape}")
-		print(f"x.shape:{x.shape}")
+		#print(f"neighbor_sum.shape:{neighbor_sum.shape}")
+		#print(f"x.shape:{x.shape}")
 		new_label= self.lin2( torch.cat((neighbor_sum, x), dim = 1) ).relu()
 		
 		return new_label
 	def message(self, x_i, x_j, edge_attr):
-		print(f"WLconv-message-x_j.shape:{x_j.shape}")
-		print(f"WLconv-message-edge_attr:{edge_attr.shape}")
+		#print(f"WLconv-message-x_j.shape:{x_j.shape}")
+		#print(f"WLconv-message-edge_attr:{edge_attr.shape}")
 		neighbor_hidden= self.lin1(torch.cat((x_j, edge_attr), dim = 1)).relu()
-		print(f"WLconv-message-neibor_hidden:{neighbor_hidden.shape}")
+		#print(f"WLconv-message-neibor_hidden:{neighbor_hidden.shape}")
 		return neighbor_hidden
 		
 
@@ -215,24 +215,24 @@ class WL_output_conv(MessagePassing):
 		self.lin3 = Linear(hidden_size, hidden_size)
 			
 	def forward(self, x, edge_index, edge_attr):
-		print(f"WLconv-x.shape:{x.shape}")
-		print(f"WLconv-edge_index.shape:{edge_index.shape}")
-		print(f"WLconv-edge_index:edge_attr.shape:{edge_attr.shape}")
+		#print(f"WLconv-x.shape:{x.shape}")
+		#print(f"WLconv-edge_index.shape:{edge_index.shape}")
+		#print(f"WLconv-edge_index:edge_attr.shape:{edge_attr.shape}")
 		neighbor_sum = self.propagate(edge_index, x=x, edge_attr = edge_attr)
-		print(f"neighbor_sum.shape:{neighbor_sum.shape}")
-		print(f"x.shape:{x.shape}")
+		#print(f"neighbor_sum.shape:{neighbor_sum.shape}")
+		#print(f"x.shape:{x.shape}")
 		out = self.lin3( neighbor_sum * x )
 		return out
 
 	def message(self, x_j, edge_attr):
-		print(f"WLconv-message-x_j.shape:{x_j.shape}")
-		print(f"WLconv-message-edge_attr:{edge_attr.shape}")
+		#print(f"WLconv-message-x_j.shape:{x_j.shape}")
+		#print(f"WLconv-message-edge_attr:{edge_attr.shape}")
 		neighbor_atoms = self.lin3(x_j)
-		print(f"WLconv-message-neighbor_atoms.shape: {neighbor_atoms.shape}")
+		#print(f"WLconv-message-neighbor_atoms.shape: {neighbor_atoms.shape}")
 		neighbor_bonds = self.lin2(edge_attr)
-		print(f"WLconv-message-neighbor_bonds.shape: {neighbor_bonds.shape}")
+		#print(f"WLconv-message-neighbor_bonds.shape: {neighbor_bonds.shape}")
 		neighbor = neighbor_atoms * neighbor_bonds
-		print("here2")
+		#print("here2")
 		return neighbor
 
 #model.py
@@ -245,9 +245,28 @@ class GAT_WLN(torch.nn.Module):
 		super(GAT_WLN, self).__init__()       
 		self.lin = Linear(node_feature_dim, hidden_size, bias = False)
 		self.lin2 = Linear(hidden_size, hidden_size, bias = False)
+		self.lin3 = Linear(hidden_size, changed_bond_dim, bias = False)
 		self.WLconv1 = WL_update_conv(edge_attr_dim,  hidden_size)
 		self.WLconv2 = WL_output_conv(edge_attr_dim, hidden_size)
 		self.GATconv = GATConv(hidden_size, hidden_size)
+
+
+	def forward(self, x, edge_index, edge_attr):
+		#print(f"x.dtype:{x.dtype}")
+		#for param in self.lin.parameters():
+		#	print(f"self.lin:{param}")
+		x = self.lin(x)
+		x = x.relu()
+		#print(f"WLN-x.shape:{x.shape}")
+		for i in range(depth):
+			x = self.WLconv1(x, edge_index, edge_attr)	
+	
+		local_features = self.WLconv2(x, edge_index, edge_attr)
+		global_features = self.GATconv(x, edge_index)
+		#print(f"local_features.shape:{local_features.shape}          global_feature.shape:{global_features.shape}")
+	
+		out = self.get_output(local_features, global_features, changed_bond_dim)
+		return out
 
 	def get_output(self, local_features, global_features, changed_bond_dim):		
 		num_atoms = local_features.shape[0]
@@ -256,48 +275,39 @@ class GAT_WLN(torch.nn.Module):
 		#create a tensor that store (atom1, atom2, changed_bond_type)
 		for x in range(num_atoms):
 			for y in range(num_atoms):
-				for z in range(changed_bond_dim):
-					paired_local_features = self.lin2(local_features[x] + local_features[y])
-					paired_global_features = self.lin2(global_features[x] + global_features[y])
-					predicted_changed_bond_map[x,y,z] = predicted_changed_bond_map[y,x,z] = 1
+				#changed_bond = []
+				#for z in range(changed_bond_dim):
+				paired_local_features = self.lin2(local_features[x] + local_features[y])
+				paired_global_features = self.lin2(global_features[x] + global_features[y])
+				t = 	self.lin3(paired_local_features + paired_global_features).tolist()
+				#print(f"self.lin3:{t}")
+				changed_bond = t#self.lin3(paired_local_features + paired_global_features).numpy()
+				predicted_changed_bond_map[x,y] = predicted_changed_bond_map[y,x] = changed_bond
 
 		#flatten changed_bond_map to an array
 		reactivity_scores = []
 		for i in range(num_atoms):
 			for j in range(num_atoms):
-				for k in range(changed_bond_dim):
-					if i == j:
-						reactivity_scores.append(INVALID_BOND) # mask
-					else:
-						reactivity_scores.append(predicted_changed_bond_map[i,j,k])
-		return torch.tensor(reactivity_scores)
+		#		for k in range(changed_bond_dim):
+				if i == j:
+					reactivity_scores.append([-1 for x in range(changed_bond_dim)]) # mask
+				else:
+					reactivity_scores.append(predicted_changed_bond_map[i,j])
+		return torch.tensor(reactivity_scores, requires_grad = True)
 
-	def forward(self, x, edge_index, edge_attr):
-		print(f"x.dtype:{x.dtype}")
-		for param in self.lin.parameters():
-			print(f"self.lin:{param}")
-		x = self.lin(x)
-		x = x.relu()
-		print(f"WLN-x.shape:{x.shape}")
-		for i in range(depth):
-			x = self.WLconv1(x, edge_index, edge_attr)	
-	
-		local_features = self.WLconv2(x, edge_index, edge_attr)
-		global_features = self.GATconv(x, edge_index)
-		print(f"local_features.shape:{local_features.shape}          global_feature.shape:{global_features.shape}")
-	
-		out = self.get_output(local_features, global_features, changed_bond_dim)
-		return out
 
 # main.py
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.data import DataLoader
 
 raw_data = "./data/raw/USPTO/trim_train.txt.proc"#"./data/USPTO/train.txt.proc"
+processed_trim_data = "trim_data.pt"
 processed_data = "data.pt"
 
 batch_size = 1
-
+hidden_channels = 100
+depth = 1
+epochs = 10
 class RexDataset(InMemoryDataset):
 	def __init__(self, root, input_file, transform=None, pre_transform=None):
 		self.input_file = input_file
@@ -306,11 +316,11 @@ class RexDataset(InMemoryDataset):
 		self.a = 1
 	@property
 	def raw_file_names(self):
-		return ['train.txt.proc']
+		return [raw_data]
 
 	@property
 	def processed_file_names(self):
-		return [processed_data]
+		return [processed_trim_data, processed_data]
 
 	def download(self):
 		pass
@@ -334,15 +344,13 @@ class RexDataset(InMemoryDataset):
 
 train_data = RexDataset("./data/my_data", raw_data)
 print(f"first data point:{train_data[0]}")
-train_data = train_data[:100]
+#train_data = train_data[:100]
 train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False)
-hidden_channels = 100
-depth = 1
 
 print(f"num_features:{train_data.num_features}      num_edge_features:{train_data.num_edge_features}                hidden_channels:{hidden_channels}")
 model = GAT_WLN(train_data.num_features, train_data.num_edge_features, hidden_channels, changed_bond_dim, depth).float()
-criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr = 0.01, weight_decay = 5e-4)
+criterion = torch.nn.CrossEntropyLoss(ignore_index = INVALID_BOND, reduction = 'sum')
+optimizer = torch.optim.Adam(model.parameters(), lr = 0.1, weight_decay = 5e-4)
 
 
 def train(data_loader):
@@ -350,14 +358,26 @@ def train(data_loader):
 	optimizer.zero_grad()  # Clear gradients.
 	for data in data_loader:
 		out = model(data.x, data.edge_index, data.edge_attr)  # Perform a single forward pass.
-		print(f"out: {out.shape}         data.y:{data.y.shape}")
+		#print(f"out: {out.shape}         data.y:{data.y.shape}")
 		loss = criterion(out, data.y)  # Compute the loss solely based on the training nodes.
+		#print(f"loss:{loss}")
 		loss.backward()  # Derive gradients.
 		optimizer.step()  # Update parameters based on gradients.
 	return loss
 
-train(train_loader)
+def test(data_loader):
+	model.eval()
+	correct = 0
+	for data in data_loader:
+		out = model(data.x, data.edge_index, data.edge_attr) 
+		pred = out.argmax(dim = 1)
+		correct += int((pred == data.y).sum())
+	return correct/ len(data_loader.dataset)
 
+for epoch in range(epochs):
+	loss = train(train_loader)
+	train_acc = test(train_loader)
+	print(f"Epoch:{epoch:03d}    Loss:{loss:.4f}     Train Acc:{train_acc:.4f}")
 
 
 

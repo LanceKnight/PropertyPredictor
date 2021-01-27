@@ -5,8 +5,9 @@ from torch_geometric.datasets import MoleculeNet
 from torch_geometric.nn import MessagePassing
 from torch_geometric.nn import global_add_pool
 from torch_geometric.data import DataLoader
+import math
 
-epoches = 100
+epoches = 150
 inner_atom_dim = 512
 
 ESOL_dataset = MoleculeNet(root = "../data/raw/ESOL", name = "ESOL")
@@ -15,8 +16,8 @@ print("============")
 print(f"num of data:{len(ESOL_dataset)}")
 
 num_data = len(ESOL_dataset)
-train_num = int(num_data * 0.64)
-val_num = int(num_data * 0.16)
+train_num = int(num_data * 0.8)
+val_num = int(num_data * 0.0)
 test_num = num_data - train_num - val_num
 print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
@@ -60,7 +61,6 @@ print(f"is_cuda:{is_cuda}")
 
 device = torch.device('cuda' if is_cuda else 'cpu')
 model = MyNet(ESOL_dataset.num_features, ESOL_dataset.num_edge_features).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr = 0.01, weight_decay = 5e-4)
 criterion = torch.nn.MSELoss()
 
 #example
@@ -96,6 +96,7 @@ def test(data_loader):
 	return MSE[0]
 
 for epoch in range(epoches):
+	optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
 	train(train_loader)
 	train_MSE = test(train_loader)
 	test_MSE = test(test_loader)

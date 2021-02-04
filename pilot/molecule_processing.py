@@ -9,11 +9,11 @@ def batch2attributes(smiles_batch, molecular_attributes=False):
 	x = []
 	edge_attr =[]
 	for smi in smiles_batch:
-		print(f"smi:{smi}")
+		#print(f"smi:{smi}")
 		smi_x, smi_edge_attr = smiles2attributes(smi, molecular_attributes= molecular_attributes)
-		print()
-		print(f"internal x:{smi_x}, edge_attr:{smi_edge_attr}")
-		print()
+		#print()
+		#print(f"internal x:{smi_x}, edge_attr:{smi_edge_attr}")
+		#print()
 		x += smi_x
 		edge_attr += smi_edge_attr
 	return torch.tensor(x), torch.tensor(edge_attr)

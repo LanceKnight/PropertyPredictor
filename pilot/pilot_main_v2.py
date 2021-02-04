@@ -11,8 +11,9 @@ from rdkit.Chem import MolFromSmiles
 import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
 import rdkit.Chem.EState as EState
 import rdkit.Chem.rdPartialCharges as rdPartialCharges
+from molecule_processing import smiles2attributes
 
-num_epoches = 0
+num_epoches = 1
 inner_atom_dim = 512
 batch_size = 64
 
@@ -77,7 +78,9 @@ def train(data_loader, debug_mode):
 	model.train()
 	for data in data_loader:
 		data.to(device)
-		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)
+		print(f"smi:{data.smiles}")
+		x, edge_attr = smiles2attributes(data.smiles, molecular_attributes= True)
+		out = model(x.float(), edge_index, data.edge_attr, data.smiles, data.batch)
 		#print(f"data:{data}")
 		#print(f"out:{len(out)},y:{len(data.y)}")
 		loss = criterion(out, data.y)
@@ -97,7 +100,8 @@ def test(data_loader, debug_mode):
 	squared_error_sum = 0 
 	for data in data_loader:
 		data.to(device)
-		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)
+		x, edge_attr = smiles2attributes(data.smiles, molecular_attributes= True)
+		out = model(x.float(), edge_index, data.edge_attr, data.smiles, data.batch)
 		pred = out
 		#print(f"pred:{len(pred)},data.y:{len(data.y)}")
 		t = sum(pow((pred - data.y),2)).cpu().detach().numpy()
@@ -143,131 +147,131 @@ for epoch in range(num_epoches):
 
 
 
-def smiles2attributes(smiles, molecular_attributes=False):
-	mol = MolFromSmiles(smiles)
-
-	#x = mol2x(mol, molecular_attributes)	
-	edge_attr = mol2edge_attr(mol)
-	return edge_attr
-
-def mol2x(rdmol, molecular_attributes):
-
-	attributes = [[] for i in rdmol.GetAtoms()]
-	if molecular_attributes:
-		labels = []
-		[attributes[i].append(x[0]) \
-			for (i, x) in enumerate(rdMolDescriptors._CalcCrippenContribs(rdmol))]
-		labels.append('Crippen contribution to logp')
-
-		[attributes[i].append(x[1]) \
-			for (i, x) in enumerate(rdMolDescriptors._CalcCrippenContribs(rdmol))]
-		labels.append('Crippen contribution to mr')
-
-		[attributes[i].append(x) \
-			for (i, x) in enumerate(rdMolDescriptors._CalcTPSAContribs(rdmol))]
-		labels.append('TPSA contribution')
-
-		[attributes[i].append(x) \
-			for (i, x) in enumerate(rdMolDescriptors._CalcLabuteASAContribs(rdmol)[0])]
-		labels.append('Labute ASA contribution')
-
-		[attributes[i].append(x) \
-			for (i, x) in enumerate(EState.EStateIndices(rdmol))]
-		labels.append('EState Index')
-
-		rdPartialCharges.ComputeGasteigerCharges(rdmol)
-		[attributes[i].append(float(a.GetProp('_GasteigerCharge'))) \
-			for (i, a) in enumerate(rdmol.GetAtoms())]
-		labels.append('Gasteiger partial charge')
-
-		# Gasteiger partial charges sometimes gives NaN
-		for i in range(len(attributes)):
-			if np.isnan(attributes[i][-1]) or np.isinf(attributes[i][-1]):
-				attributes[i][-1] = 0.0
-
-		[attributes[i].append(float(a.GetProp('_GasteigerHCharge'))) \
-			for (i, a) in enumerate(rdmol.GetAtoms())]
-		labels.append('Gasteiger hydrogen partial charge')
-
-		# Gasteiger partial charges sometimes gives NaN
-		for i in range(len(attributes)):
-			if np.isnan(attributes[i][-1]) or np.isinf(attributes[i][-1]):
-				attributes[i][-1] = 0.0
-	
-	x_list = []
-
-	for i, atom in enumerate(rdmol.GetAtoms()):
-		atom_attr = atom_attributes(atom, extra_attributes = attributes[i])
-		x_list.append(atom_attr)
-	x_array = np.array(x_list)
-	x = torch.from_numpy(x_array)
-	return x
-
-def mol2edge_attr(mol):
-	attr_list = []
-	for bond in mol.GetBonds():
-		bond_attr = bond_attributes(bond)
-		attr_list.append(bond_attr)
-	attr_array = np.array(attr_list)
-	edge_attr = torch.from_numpy(attr_array)
-	return edge_attr
-	
-
-def bond_attributes(bond):
-	# Initialize
-	attributes = []
-	# Add bond type
-	attributes += one_hot_embedding(
-		bond.GetBondTypeAsDouble(),
-		[1.0, 1.5, 2.0, 3.0]
-	)
-	# Add if is aromatic
-	attributes.append(bond.GetIsAromatic())
-	# Add if bond is conjugated
-	attributes.append(bond.GetIsConjugated())
-	# Add if bond is part of ring
-	attributes.append(bond.IsInRing())
-
-	# NEED THIS FOR TENSOR REPRESENTATION - 1 IF THERE IS A BOND
-	#attributes.append(1)
-
-	return np.array(attributes, dtype = np.single)
-
-def atom_attributes(atom, extra_attributes=[]):
-	attributes = []
-	attributes += one_hot_embedding(
-		atom.GetAtomicNum(), 
-		[5, 6, 7, 8, 9, 15, 16, 17, 35, 53, 999]
-	)
-	
-	# Add heavy neighbor count
-	attributes += one_hot_embedding(
-		len(atom.GetNeighbors()),
-		[0, 1, 2, 3, 4, 5]
-	)
-	# Add hydrogen count
-	attributes += one_hot_embedding(
-		atom.GetTotalNumHs(),
-		[0, 1, 2, 3, 4]
-	)
-	# Add formal charge
-	attributes.append(atom.GetFormalCharge())
-	# Add boolean if in ring
-	attributes.append(atom.IsInRing())
-	# Add boolean if aromatic atom
-	attributes.append(atom.GetIsAromatic())
-
-
-	attributes += extra_attributes
-
-	return np.array(attributes, dtype = np.single)
-
-def one_hot_embedding(val, lst):
-	if val not in lst:
-		val = lst[-1]
-	return map(lambda x: x == val, lst)
-
-	
-smi = 'CC'
-x = smiles2attributes(smi, molecular_attributes= True)
-print(f'x:{x}')
+#def smiles2attributes(smiles, molecular_attributes=False):
+#	mol = MolFromSmiles(smiles)
+#
+#	x = mol2x(mol, molecular_attributes)	
+#	edge_attr = mol2edge_attr(mol)
+#	return x, edge_attr
+#
+#def mol2x(rdmol, molecular_attributes):
+#
+#	attributes = [[] for i in rdmol.GetAtoms()]
+#	if molecular_attributes:
+#		labels = []
+#		[attributes[i].append(x[0]) \
+#			for (i, x) in enumerate(rdMolDescriptors._CalcCrippenContribs(rdmol))]
+#		labels.append('Crippen contribution to logp')
+#
+#		[attributes[i].append(x[1]) \
+#			for (i, x) in enumerate(rdMolDescriptors._CalcCrippenContribs(rdmol))]
+#		labels.append('Crippen contribution to mr')
+#
+#		[attributes[i].append(x) \
+#			for (i, x) in enumerate(rdMolDescriptors._CalcTPSAContribs(rdmol))]
+#		labels.append('TPSA contribution')
+#
+#		[attributes[i].append(x) \
+#			for (i, x) in enumerate(rdMolDescriptors._CalcLabuteASAContribs(rdmol)[0])]
+#		labels.append('Labute ASA contribution')
+#
+#		[attributes[i].append(x) \
+#			for (i, x) in enumerate(EState.EStateIndices(rdmol))]
+#		labels.append('EState Index')
+#
+#		rdPartialCharges.ComputeGasteigerCharges(rdmol)
+#		[attributes[i].append(float(a.GetProp('_GasteigerCharge'))) \
+#			for (i, a) in enumerate(rdmol.GetAtoms())]
+#		labels.append('Gasteiger partial charge')
+#
+#		# Gasteiger partial charges sometimes gives NaN
+#		for i in range(len(attributes)):
+#			if np.isnan(attributes[i][-1]) or np.isinf(attributes[i][-1]):
+#				attributes[i][-1] = 0.0
+#
+#		[attributes[i].append(float(a.GetProp('_GasteigerHCharge'))) \
+#			for (i, a) in enumerate(rdmol.GetAtoms())]
+#		labels.append('Gasteiger hydrogen partial charge')
+#
+#		# Gasteiger partial charges sometimes gives NaN
+#		for i in range(len(attributes)):
+#			if np.isnan(attributes[i][-1]) or np.isinf(attributes[i][-1]):
+#				attributes[i][-1] = 0.0
+#	
+#	x_list = []
+#
+#	for i, atom in enumerate(rdmol.GetAtoms()):
+#		atom_attr = atom_attributes(atom, extra_attributes = attributes[i])
+#		x_list.append(atom_attr)
+#	x_array = np.array(x_list)
+#	x = torch.from_numpy(x_array)
+#	return x
+#
+#def mol2edge_attr(mol):
+#	attr_list = []
+#	for bond in mol.GetBonds():
+#		bond_attr = bond_attributes(bond)
+#		attr_list.append(bond_attr)
+#	attr_array = np.array(attr_list)
+#	edge_attr = torch.from_numpy(attr_array)
+#	return edge_attr
+#	
+#
+#def bond_attributes(bond):
+#	# Initialize
+#	attributes = []
+#	# Add bond type
+#	attributes += one_hot_embedding(
+#		bond.GetBondTypeAsDouble(),
+#		[1.0, 1.5, 2.0, 3.0]
+#	)
+#	# Add if is aromatic
+#	attributes.append(bond.GetIsAromatic())
+#	# Add if bond is conjugated
+#	attributes.append(bond.GetIsConjugated())
+#	# Add if bond is part of ring
+#	attributes.append(bond.IsInRing())
+#
+#	# NEED THIS FOR TENSOR REPRESENTATION - 1 IF THERE IS A BOND
+#	#attributes.append(1)
+#
+#	return np.array(attributes, dtype = np.single)
+#
+#def atom_attributes(atom, extra_attributes=[]):
+#	attributes = []
+#	attributes += one_hot_embedding(
+#		atom.GetAtomicNum(), 
+#		[5, 6, 7, 8, 9, 15, 16, 17, 35, 53, 999]
+#	)
+#	
+#	# Add heavy neighbor count
+#	attributes += one_hot_embedding(
+#		len(atom.GetNeighbors()),
+#		[0, 1, 2, 3, 4, 5]
+#	)
+#	# Add hydrogen count
+#	attributes += one_hot_embedding(
+#		atom.GetTotalNumHs(),
+#		[0, 1, 2, 3, 4]
+#	)
+#	# Add formal charge
+#	attributes.append(atom.GetFormalCharge())
+#	# Add boolean if in ring
+#	attributes.append(atom.IsInRing())
+#	# Add boolean if aromatic atom
+#	attributes.append(atom.GetIsAromatic())
+#
+#
+#	attributes += extra_attributes
+#
+#	return np.array(attributes, dtype = np.single)
+#
+#def one_hot_embedding(val, lst):
+#	if val not in lst:
+#		val = lst[-1]
+#	return map(lambda x: x == val, lst)
+#
+#	
+#smi = 'CC'
+#x = smiles2attributes(smi, molecular_attributes= True)
+#print(f'x:{x}')

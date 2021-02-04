@@ -5,6 +5,9 @@ import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
 import rdkit.Chem.EState as EState
 import rdkit.Chem.rdPartialCharges as rdPartialCharges
 
+num_node_features = 32
+num_edge_features = 7
+
 def batch2attributes(smiles_batch, molecular_attributes=False):
 	x = []
 	edge_attr =[]

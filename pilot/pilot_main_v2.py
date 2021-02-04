@@ -11,9 +11,9 @@ from rdkit.Chem import MolFromSmiles
 import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
 import rdkit.Chem.EState as EState
 import rdkit.Chem.rdPartialCharges as rdPartialCharges
-from molecule_processing import smiles2attributes
+from molecule_processing import batch2attributes, num_node_features, num_edge_features
 
-num_epoches = 1
+num_epoches = 150
 inner_atom_dim = 512
 batch_size = 64
 
@@ -67,21 +67,26 @@ is_cuda = torch.cuda.is_available()
 #print(f"is_cuda:{is_cuda}")
 
 device = torch.device('cuda' if is_cuda else 'cpu')
-model = MyNet(ESOL_dataset.num_features, ESOL_dataset.num_edge_features).to(device)
+model = MyNet(num_node_features, num_edge_features).to(device)
 criterion = torch.nn.MSELoss()
 
 #example
-data = ESOL_dataset[0].to(device)
-#print(f"data[0]:{data}")
+data = ESOL_dataset[12].to(device)
+#print(f"smi:{data.smiles}  edge_index:\n{data.edge_index}  edge_attr:\n{data.edge_attr} ")
 
 def train(data_loader, debug_mode):
 	model.train()
 	for data in data_loader:
+		#print(f"smi:{data.smiles}")
+		x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
+		#print(f"before- data.x:{data.x.shape}, edge_attr:{data.edge_attr.shape}")
+		data.x = x
+		data.edge_attr = edge_attr
 		data.to(device)
-		print(f"smi:{data.smiles}")
-		x, edge_attr = smiles2attributes(data.smiles, molecular_attributes= True)
-		out = model(x.float(), edge_index, data.edge_attr, data.smiles, data.batch)
-		#print(f"data:{data}")
+	
+		#print(f"data.x:{data.x.shape}")
+		#print(f"data.edge_attr:{data.edge_attr.shape}")
+		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
 		#print(f"out:{len(out)},y:{len(data.y)}")
 		loss = criterion(out, data.y)
 		loss.backward()
@@ -99,9 +104,15 @@ def test(data_loader, debug_mode):
 
 	squared_error_sum = 0 
 	for data in data_loader:
-		data.to(device)
-		x, edge_attr = smiles2attributes(data.smiles, molecular_attributes= True)
-		out = model(x.float(), edge_index, data.edge_attr, data.smiles, data.batch)
+		#data.to(device)
+		x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
+		#x.to(device)
+		#edge_attr.to(device)
+		data.x = x
+		data.edge_attr = edge_attr
+		data.to(device)	
+
+		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch) # use our own x and edge_attr instead of data.x and data.edge_attr
 		pred = out
 		#print(f"pred:{len(pred)},data.y:{len(data.y)}")
 		t = sum(pow((pred - data.y),2)).cpu().detach().numpy()

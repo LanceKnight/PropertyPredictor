@@ -87,7 +87,7 @@ def train(data_loader, debug_mode):
 		#print(f"data.x:{data.x.shape}")
 		#print(f"data.edge_attr:{data.edge_attr.shape}")
 		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
-		#print(f"out:{len(out)},y:{len(data.y)}")
+		#print(f"out:{out},y:{data.y}")
 		loss = criterion(out, data.y)
 		loss.backward()
 		optimizer.step()
@@ -96,8 +96,8 @@ def train(data_loader, debug_mode):
 			out_list = out.cpu().detach().numpy()
 			y_list = data.y.cpu().detach().numpy()
 			#print(f"{len(out_list)}, {len(y_list)}")
-#			for i in range(len(out_list)):
-#				print(f"{out_list[i][0]}, {y_list[i][0]}")
+			for i in range(len(out_list)): 
+				print(f"{out_list[i][0]}, {y_list[i][0]}") # for making correlation plot
 
 def test(data_loader, debug_mode):
 	model.eval()
@@ -119,6 +119,7 @@ def test(data_loader, debug_mode):
 		if(debug_mode):
 			p = pred.cpu().detach().numpy()
 			y = data.y.cpu().detach().numpy()
+			#for debugging
 #			print(f"pred:============")
 #			for i in range(len(p)):
 #				print(p[i][0])
@@ -133,12 +134,21 @@ def test(data_loader, debug_mode):
 #				print((pow(p[i]-y[i],2))[0])
 #			print(f"sum=======")
 #			print(t)
+
+
+			# for plotting 
+			out_list = out.cpu().detach().numpy()
+			y_list = data.y.cpu().detach().numpy()
+			#print(f"{len(out_list)}, {len(y_list)}")
+			for i in range(len(out_list)): 
+				print(f"{out_list[i][0]}, {y_list[i][0]}") # for making correlation plot
 		squared_error_sum +=t
 
 	num_samples = get_num_samples(data_loader)
 	MSE = squared_error_sum / num_samples
 	if(debug_mode):
-		print(f"squared_error_sum: {squared_error_sum}, len:{num_samples}, MSE:{MSE}")	
+		pass
+		#print(f"squared_error_sum: {squared_error_sum}, len:{num_samples}, MSE:{MSE}")	
 	return MSE[0]
 
 def get_num_samples(data_loader):
@@ -151,9 +161,9 @@ def get_num_samples(data_loader):
 for epoch in range(num_epoches):
 	optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
 	train(train_loader, False)#epoch==(num_epoches-1))
-	train_MSE = test(train_loader, False)# epoch==(num_epoches-1))
-	test_MSE = test(test_loader, False)# epoch==(num_epoches-1))
-	print(f"Epoch:{epoch:03d}, Train MSE:{train_MSE: .4f}, Test MSE:{test_MSE: .4f}")
+	train_MSE = test(train_loader, False)#  epoch==(num_epoches-1))
+	test_MSE = test(test_loader,  epoch==(num_epoches-1))
+	#print(f"Epoch:{epoch:03d}, Train MSE:{train_MSE: .4f}, Test MSE:{test_MSE: .4f}")
 
 
 

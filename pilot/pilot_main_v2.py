@@ -12,10 +12,13 @@ import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
 import rdkit.Chem.EState as EState
 import rdkit.Chem.rdPartialCharges as rdPartialCharges
 from molecule_processing import batch2attributes, num_node_features, num_edge_features
+from torch.nn import Tanh, Softmax
 
 num_epoches = 150
 inner_atom_dim = 512
 batch_size = 64
+hidden_activation = Softmax()#Tanh()
+
 
 ESOL_dataset = MoleculeNet(root = "../data/raw/ESOL", name = "ESOL")
 #print("data info:")
@@ -45,7 +48,7 @@ class AtomBondConv(MessagePassing):
 	def message(self, x_j, edge_attr):
 		#print(f"x_j.shape:{x_j.shape}, edge_attr.shape:{edge_attr.shape}")
 		neighbor_atom_bond_feature = torch.cat((x_j, edge_attr), dim = 1)
-		neighbor_feature = self.lin1(neighbor_atom_bond_feature)
+		neighbor_feature = hidden_activation(self.lin1(neighbor_atom_bond_feature))
 		return neighbor_feature
 
 

@@ -1,2 +1,3 @@
 v1.0 an initial working version
 v2.0 conner's version
+v3.0 add more conv depth

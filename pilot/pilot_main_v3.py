@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from torch.nn import Linear
+from torch.nn import Linear, Tanh, Softmax, Sigmoid
 from torch_geometric.datasets import MoleculeNet
 from torch_geometric.nn import MessagePassing, global_add_pool
 from torch_geometric.utils import add_self_loops
@@ -13,7 +13,7 @@ import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
 import rdkit.Chem.EState as EState
 import rdkit.Chem.rdPartialCharges as rdPartialCharges
 from molecule_processing import batch2attributes, num_node_features, num_edge_features
-from torch.nn import Tanh, Softmax
+ 
 
 num_epoches = 150
 inner_atom_dim = 512
@@ -73,9 +73,9 @@ class MyNet(torch.nn.Module):
 			x = self.atom_bond_conv(x, edge_index, edge_attr, smiles, batch)
 		
 		molecule_feature = global_add_pool(x, batch)
-		hidden = self.lin1(molecule_feature)
+		hidden = Tanh()(self.lin1(molecule_feature))
 		#print(f"hidden.shape:{hidden.shape}")
-		out = self.lin2(hidden)
+		out = Sigmoid()(self.lin2(hidden))
 		return out
 		
 is_cuda = torch.cuda.is_available()

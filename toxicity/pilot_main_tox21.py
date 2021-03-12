@@ -23,8 +23,8 @@ inner_atom_dim = 512
 batch_size = 64
 hidden_activation = Softmax()#Tanh()
 conv_depth = 5
-target_col =0
-
+target_col =11
+print(f"target_col:{target_col}")
 Tox21_dataset = MoleculeNet(root = "../data/raw/Tox21", name = "Tox21")
 #print("data info:")
 #print("============")
@@ -38,7 +38,7 @@ print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
 train_loader = DataLoader(Tox21_dataset[:train_num], batch_size = batch_size, shuffle = False)
 validate_loader = DataLoader(Tox21_dataset[train_num:train_num+val_num], batch_size = batch_size, shuffle = False)
-test_loader = DataLoader(Tox21_dataset[-test_num:], batch_size = batch_size, shuffle = False)
+test_loader = DataLoader(Tox21_dataset[-test_num:], batch_size = test_num, shuffle = False)
 
 class AtomBondConv(MessagePassing):
 	def __init__(self, x_dim, edge_attr_dim):
@@ -163,12 +163,12 @@ def test(data_loader, debug_mode):
 		out = out[~np.isnan(y)]
 		y = y[~np.isnan(y)]
 
-		#print(f"data.y.shape:{y.shape}   out.shape:{out.shape})")
+		#print(f"data.y.shape:{y}   out.shape:{out})")
 		sc = roc_auc_score(y, out)
 		auc_lst.append(sc)
 		if(debug_mode):
-			p = pred.cpu().detach().numpy()
-			y = data.y.cpu().detach().numpy()
+			#p = pred.cpu().detach().numpy()
+			#y = data.y.cpu().detach().numpy()
 			#for debugging
 #			print(f"pred:============")
 #			for i in range(len(p)):
@@ -209,7 +209,8 @@ for epoch in range(num_epoches):
 	optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
 	train(train_loader, False)#epoch==(num_epoches-1))
 	#print("=============testing starts=======")
-	train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
-	test_sc = test(test_loader,  epoch==(num_epoches-1))
-	print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
+	#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
+	test_sc = test(test_loader, False)# epoch==(num_epoches-1))
+	#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
+	print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
 

@@ -18,7 +18,7 @@ num_epoches = 150
 inner_atom_dim = 512
 batch_size = 64
 hidden_activation = Softmax()#Tanh()
-
+conv_depth = 5
 
 ESOL_dataset = MoleculeNet(root = "../data/raw/ESOL", name = "ESOL")
 #print("data info:")
@@ -36,11 +36,13 @@ validate_loader = DataLoader(ESOL_dataset[train_num:train_num+val_num], batch_si
 test_loader = DataLoader(ESOL_dataset[-test_num:], batch_size = batch_size, shuffle = False)
 
 class AtomBondConv(MessagePassing):
-	def __init__(self, x_dim, edge_attr_dim):
+	def __init__(self, x_dim, edge_attr_dim, depth):
 		super(AtomBondConv, self).__init__(aggr = 'add')
 		self.lin1 = Linear(x_dim+edge_attr_dim, inner_atom_dim)
+		self.depth = depth
 
 	def forward(self, x, edge_index, edge_attr, smiles, batch):	
+		
 		x = self.propagate(edge_index, x = x, edge_attr = edge_attr)
 		molecule_feature = global_add_pool(x, batch)
 		return molecule_feature
@@ -53,9 +55,9 @@ class AtomBondConv(MessagePassing):
 
 
 class MyNet(torch.nn.Module):
-	def __init__(self, num_node_features, num_edge_features):
+	def __init__(self, num_node_features, num_edge_features, depth):
 		super(MyNet, self).__init__()
-		self.atom_bond_conv = AtomBondConv(num_node_features, num_edge_features)
+		self.atom_bond_conv = AtomBondConv(num_node_features, num_edge_features, depth)
 		self.lin1 = Linear(inner_atom_dim, 50)
 		self.lin2 = Linear(50, 1)
 
@@ -70,7 +72,7 @@ is_cuda = torch.cuda.is_available()
 #print(f"is_cuda:{is_cuda}")
 
 device = torch.device('cuda' if is_cuda else 'cpu')
-model = MyNet(num_node_features, num_edge_features).to(device)
+model = MyNet(num_node_features, num_edge_features, conv_depth).to(device)
 criterion = torch.nn.MSELoss()
 
 #example

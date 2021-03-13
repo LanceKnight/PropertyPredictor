@@ -189,7 +189,8 @@ def get_num_samples(data_loader):
 for epoch in range(num_epoches):
 	optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
 	train(train_loader, False)#epoch==(num_epoches-1))
-	train_MSE = test(train_loader, False)#  epoch==(num_epoches-1))
-	test_MSE = test(test_loader,  epoch==(num_epoches-1))
-	print(f"Epoch:{epoch:03d}, Train MSE:{train_MSE: .4f}, Test MSE:{test_MSE: .4f}")
+	train_MSE = test(train_loader,   epoch==(num_epoches-1))
+	test_MSE = test(test_loader,  False)#epoch==(num_epoches-1))
+	if(epoch==(num_epoches-1)):
+		print(f"Epoch:{epoch:03d}, Train MSE:{train_MSE: .4f}, Test MSE:{test_MSE: .4f}")
 

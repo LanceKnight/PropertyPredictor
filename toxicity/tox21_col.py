@@ -23,22 +23,23 @@ inner_atom_dim = 512
 batch_size = 64
 hidden_activation = Softmax()#Tanh()
 conv_depth = 5
-target_col =11
+target_col = [x for x in range(1)]
+
 print(f"target_col:{target_col}")
-Tox21_dataset = MoleculeNet(root = "../data/raw/Tox21", name = "Tox21")
+Tox21 = MoleculeNet(root = "../data/raw/Tox21", name = "Tox21")
 #print("data info:")
 #print("============")
-#print(f"num of data:{len(Tox21_dataset)}")
+#print(f"num of data:{len(Tox21)}")
 
-num_data = len(Tox21_dataset)
+num_data = len(Tox21)
 train_num = int(num_data * 0.8)
 val_num = int(num_data * 0.0)
 test_num = num_data - train_num - val_num
 print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
-train_loader = DataLoader(Tox21_dataset[:train_num], batch_size = batch_size, shuffle = False)
-validate_loader = DataLoader(Tox21_dataset[train_num:train_num+val_num], batch_size = batch_size, shuffle = False)
-test_loader = DataLoader(Tox21_dataset[-test_num:], batch_size = test_num, shuffle = False)
+train_loader = DataLoader(Tox21[:train_num], batch_size = batch_size, shuffle = False)
+validate_loader = DataLoader(Tox21[train_num:train_num+val_num], batch_size = batch_size, shuffle = False)
+test_loader = DataLoader(Tox21[-test_num:], batch_size = test_num, shuffle = False)
 
 class AtomBondConv(MessagePassing):
 	def __init__(self, x_dim, edge_attr_dim):
@@ -82,8 +83,8 @@ class MyNet(torch.nn.Module):
 		
 
 #example
-#data_loader = DataLoader(Tox21_dataset[0:1], batch_size = 1, shuffle= False)
-#data = Tox21_dataset[12].to(device)
+#data_loader = DataLoader(Tox21[0:1], batch_size = 1, shuffle= False)
+#data = Tox21[12].to(device)
 #print(f"smi:{data.smiles}\n  edge_index:\n{data.edge_index}\n  edge_attr:\n{data.edge_attr} \ny:\n{data.y}\n  y.shape:{data.y.shape}")
 
 #out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
@@ -112,7 +113,7 @@ def BCELoss_no_NaN(out, target):
 	#print(f"target_no_NaN:{target_no_NaN}")
 	return torch.nn.BCELoss()(out, target_no_NaN)
 
-def train(data_loader, debug_mode):
+def train(data_loader, debug_mode, target_col):
 	model.train()
 	for data in data_loader:
 		#print(f"smi:{data.smiles}")
@@ -140,7 +141,7 @@ def train(data_loader, debug_mode):
 			for i in range(len(out_list)): 
 				print(f"{out_list[i][0]}, {y_list[i][0]}") # for making correlation plot
 
-def test(data_loader, debug_mode):
+def test(data_loader, debug_mode, target_col):
 	model.eval()
 
 	auc_lst = []
@@ -204,13 +205,17 @@ def get_num_samples(data_loader):
 	#print(f"len(data_loader):{len(data_loader)}, last batch:{num_graph_in_last_batch},  total:{total}")
 	return total 
 
-for epoch in range(num_epoches):
-	#print(f"epoch:{epoch: 3}")
-	optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
-	train(train_loader, False)#epoch==(num_epoches-1))
-	#print("=============testing starts=======")
-	#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
-	test_sc = test(test_loader, False)# epoch==(num_epoches-1))
-	#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
-	print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-
+col_result = []
+for col in target_col:
+	print(f"col:{col}")
+	test_sc = 0
+	for epoch in range(num_epoches):
+		optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
+		train(train_loader, False, col)#epoch==(num_epoches-1))
+		#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
+		test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
+		#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
+		if((epoch==num_epoches -1)):
+			print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
+	col_result.append(col_result)
+print(col_result)

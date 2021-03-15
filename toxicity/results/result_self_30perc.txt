@@ -1,0 +1,1778 @@
+target_col:[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+train_num = 6264, val_num = 0, test_num = 1567
+col:0
+epoch:0
+Epoch:000, Test AUC: 0.4822
+epoch:1
+Epoch:001, Test AUC: 0.6148
+epoch:2
+Epoch:002, Test AUC: 0.6476
+epoch:3
+Epoch:003, Test AUC: 0.6582
+epoch:4
+Epoch:004, Test AUC: 0.6724
+epoch:5
+Epoch:005, Test AUC: 0.6771
+epoch:6
+Epoch:006, Test AUC: 0.6838
+epoch:7
+Epoch:007, Test AUC: 0.6878
+epoch:8
+Epoch:008, Test AUC: 0.6918
+epoch:9
+Epoch:009, Test AUC: 0.6932
+epoch:10
+Epoch:010, Test AUC: 0.6920
+epoch:11
+Epoch:011, Test AUC: 0.6967
+epoch:12
+Epoch:012, Test AUC: 0.6932
+epoch:13
+Epoch:013, Test AUC: 0.6987
+epoch:14
+Epoch:014, Test AUC: 0.6964
+epoch:15
+Epoch:015, Test AUC: 0.6987
+epoch:16
+Epoch:016, Test AUC: 0.7014
+epoch:17
+Epoch:017, Test AUC: 0.7039
+epoch:18
+Epoch:018, Test AUC: 0.7040
+epoch:19
+Epoch:019, Test AUC: 0.7110
+epoch:20
+Epoch:020, Test AUC: 0.7109
+epoch:21
+Epoch:021, Test AUC: 0.7138
+epoch:22
+Epoch:022, Test AUC: 0.7135
+epoch:23
+Epoch:023, Test AUC: 0.7159
+epoch:24
+Epoch:024, Test AUC: 0.7173
+epoch:25
+Epoch:025, Test AUC: 0.7152
+epoch:26
+Epoch:026, Test AUC: 0.7224
+epoch:27
+Epoch:027, Test AUC: 0.7185
+epoch:28
+Epoch:028, Test AUC: 0.7214
+epoch:29
+Epoch:029, Test AUC: 0.7238
+epoch:30
+Epoch:030, Test AUC: 0.7236
+epoch:31
+Epoch:031, Test AUC: 0.7269
+epoch:32
+Epoch:032, Test AUC: 0.7298
+epoch:33
+Epoch:033, Test AUC: 0.7298
+epoch:34
+Epoch:034, Test AUC: 0.7301
+epoch:35
+Epoch:035, Test AUC: 0.7306
+epoch:36
+Epoch:036, Test AUC: 0.7343
+epoch:37
+Epoch:037, Test AUC: 0.7390
+epoch:38
+Epoch:038, Test AUC: 0.7406
+epoch:39
+Epoch:039, Test AUC: 0.7437
+epoch:40
+Epoch:040, Test AUC: 0.7432
+epoch:41
+Epoch:041, Test AUC: 0.7436
+epoch:42
+Epoch:042, Test AUC: 0.7480
+epoch:43
+Epoch:043, Test AUC: 0.7488
+epoch:44
+Epoch:044, Test AUC: 0.7500
+epoch:45
+Epoch:045, Test AUC: 0.7495
+epoch:46
+Epoch:046, Test AUC: 0.7495
+epoch:47
+Epoch:047, Test AUC: 0.7498
+epoch:48
+Epoch:048, Test AUC: 0.7520
+epoch:49
+Epoch:049, Test AUC: 0.7523
+epoch:50
+Epoch:050, Test AUC: 0.7542
+epoch:51
+Epoch:051, Test AUC: 0.7530
+epoch:52
+Epoch:052, Test AUC: 0.7527
+epoch:53
+Epoch:053, Test AUC: 0.7527
+epoch:54
+Epoch:054, Test AUC: 0.7568
+epoch:55
+Epoch:055, Test AUC: 0.7526
+epoch:56
+Epoch:056, Test AUC: 0.7543
+epoch:57
+Epoch:057, Test AUC: 0.7543
+epoch:58
+Epoch:058, Test AUC: 0.7546
+epoch:59
+Epoch:059, Test AUC: 0.7575
+epoch:60
+Epoch:060, Test AUC: 0.7583
+epoch:61
+Epoch:061, Test AUC: 0.7588
+epoch:62
+Epoch:062, Test AUC: 0.7582
+epoch:63
+Epoch:063, Test AUC: 0.7592
+epoch:64
+Epoch:064, Test AUC: 0.7619
+epoch:65
+Epoch:065, Test AUC: 0.7612
+epoch:66
+Epoch:066, Test AUC: 0.7608
+epoch:67
+Epoch:067, Test AUC: 0.7615
+epoch:68
+Epoch:068, Test AUC: 0.7627
+epoch:69
+Epoch:069, Test AUC: 0.7614
+epoch:70
+Epoch:070, Test AUC: 0.7625
+epoch:71
+Epoch:071, Test AUC: 0.7630
+epoch:72
+Epoch:072, Test AUC: 0.7627
+epoch:73
+Epoch:073, Test AUC: 0.7604
+epoch:74
+Epoch:074, Test AUC: 0.7610
+epoch:75
+Epoch:075, Test AUC: 0.7598
+epoch:76
+Epoch:076, Test AUC: 0.7597
+epoch:77
+Epoch:077, Test AUC: 0.7607
+epoch:78
+Epoch:078, Test AUC: 0.7594
+epoch:79
+Epoch:079, Test AUC: 0.7600
+epoch:80
+Epoch:080, Test AUC: 0.7615
+epoch:81
+Epoch:081, Test AUC: 0.7602
+epoch:82
+Epoch:082, Test AUC: 0.7604
+epoch:83
+Epoch:083, Test AUC: 0.7608
+epoch:84
+Epoch:084, Test AUC: 0.7605
+epoch:85
+Epoch:085, Test AUC: 0.7600
+epoch:86
+Epoch:086, Test AUC: 0.7600
+epoch:87
+Epoch:087, Test AUC: 0.7599
+epoch:88
+Epoch:088, Test AUC: 0.7602
+epoch:89
+Epoch:089, Test AUC: 0.7593
+epoch:90
+Epoch:090, Test AUC: 0.7605
+epoch:91
+Epoch:091, Test AUC: 0.7598
+epoch:92
+Epoch:092, Test AUC: 0.7614
+epoch:93
+Epoch:093, Test AUC: 0.7624
+epoch:94
+Epoch:094, Test AUC: 0.7614
+epoch:95
+Epoch:095, Test AUC: 0.7619
+epoch:96
+Epoch:096, Test AUC: 0.7629
+epoch:97
+Epoch:097, Test AUC: 0.7626
+epoch:98
+Epoch:098, Test AUC: 0.7616
+epoch:99
+Epoch:099, Test AUC: 0.7627
+Epoch:099, Test AUC: 0.7627
+col:1
+epoch:0
+Epoch:000, Test AUC: 0.8048
+epoch:1
+Epoch:001, Test AUC: 0.7785
+epoch:2
+Epoch:002, Test AUC: 0.7691
+epoch:3
+Epoch:003, Test AUC: 0.7863
+epoch:4
+Epoch:004, Test AUC: 0.7889
+epoch:5
+Epoch:005, Test AUC: 0.7924
+epoch:6
+Epoch:006, Test AUC: 0.7837
+epoch:7
+Epoch:007, Test AUC: 0.7878
+epoch:8
+Epoch:008, Test AUC: 0.7943
+epoch:9
+Epoch:009, Test AUC: 0.7966
+epoch:10
+Epoch:010, Test AUC: 0.7992
+epoch:11
+Epoch:011, Test AUC: 0.8009
+epoch:12
+Epoch:012, Test AUC: 0.8091
+epoch:13
+Epoch:013, Test AUC: 0.8047
+epoch:14
+Epoch:014, Test AUC: 0.8052
+epoch:15
+Epoch:015, Test AUC: 0.8053
+epoch:16
+Epoch:016, Test AUC: 0.8160
+epoch:17
+Epoch:017, Test AUC: 0.8082
+epoch:18
+Epoch:018, Test AUC: 0.8075
+epoch:19
+Epoch:019, Test AUC: 0.8079
+epoch:20
+Epoch:020, Test AUC: 0.8085
+epoch:21
+Epoch:021, Test AUC: 0.8110
+epoch:22
+Epoch:022, Test AUC: 0.8081
+epoch:23
+Epoch:023, Test AUC: 0.8128
+epoch:24
+Epoch:024, Test AUC: 0.8115
+epoch:25
+Epoch:025, Test AUC: 0.8137
+epoch:26
+Epoch:026, Test AUC: 0.8135
+epoch:27
+Epoch:027, Test AUC: 0.8134
+epoch:28
+Epoch:028, Test AUC: 0.8014
+epoch:29
+Epoch:029, Test AUC: 0.8068
+epoch:30
+Epoch:030, Test AUC: 0.8057
+epoch:31
+Epoch:031, Test AUC: 0.8037
+epoch:32
+Epoch:032, Test AUC: 0.8025
+epoch:33
+Epoch:033, Test AUC: 0.8088
+epoch:34
+Epoch:034, Test AUC: 0.8093
+epoch:35
+Epoch:035, Test AUC: 0.8088
+epoch:36
+Epoch:036, Test AUC: 0.8159
+epoch:37
+Epoch:037, Test AUC: 0.8099
+epoch:38
+Epoch:038, Test AUC: 0.8170
+epoch:39
+Epoch:039, Test AUC: 0.8201
+epoch:40
+Epoch:040, Test AUC: 0.8115
+epoch:41
+Epoch:041, Test AUC: 0.8119
+epoch:42
+Epoch:042, Test AUC: 0.8108
+epoch:43
+Epoch:043, Test AUC: 0.8080
+epoch:44
+Epoch:044, Test AUC: 0.8085
+epoch:45
+Epoch:045, Test AUC: 0.8080
+epoch:46
+Epoch:046, Test AUC: 0.8099
+epoch:47
+Epoch:047, Test AUC: 0.8074
+epoch:48
+Epoch:048, Test AUC: 0.8083
+epoch:49
+Epoch:049, Test AUC: 0.8112
+epoch:50
+Epoch:050, Test AUC: 0.8111
+epoch:51
+Epoch:051, Test AUC: 0.8136
+epoch:52
+Epoch:052, Test AUC: 0.8152
+epoch:53
+Epoch:053, Test AUC: 0.8150
+epoch:54
+Epoch:054, Test AUC: 0.8174
+epoch:55
+Epoch:055, Test AUC: 0.8163
+epoch:56
+Epoch:056, Test AUC: 0.8182
+epoch:57
+Epoch:057, Test AUC: 0.8180
+epoch:58
+Epoch:058, Test AUC: 0.8195
+epoch:59
+Epoch:059, Test AUC: 0.8210
+epoch:60
+Epoch:060, Test AUC: 0.8227
+epoch:61
+Epoch:061, Test AUC: 0.8223
+epoch:62
+Epoch:062, Test AUC: 0.8217
+epoch:63
+Epoch:063, Test AUC: 0.8228
+epoch:64
+Epoch:064, Test AUC: 0.8246
+epoch:65
+Epoch:065, Test AUC: 0.8256
+epoch:66
+Epoch:066, Test AUC: 0.8263
+epoch:67
+Epoch:067, Test AUC: 0.8270
+epoch:68
+Epoch:068, Test AUC: 0.8264
+epoch:69
+Epoch:069, Test AUC: 0.8273
+epoch:70
+Epoch:070, Test AUC: 0.8267
+epoch:71
+Epoch:071, Test AUC: 0.8276
+epoch:72
+Epoch:072, Test AUC: 0.8279
+epoch:73
+Epoch:073, Test AUC: 0.8283
+epoch:74
+Epoch:074, Test AUC: 0.8286
+epoch:75
+Epoch:075, Test AUC: 0.8284
+epoch:76
+Epoch:076, Test AUC: 0.8289
+epoch:77
+Epoch:077, Test AUC: 0.8292
+epoch:78
+Epoch:078, Test AUC: 0.8285
+epoch:79
+Epoch:079, Test AUC: 0.8284
+epoch:80
+Epoch:080, Test AUC: 0.8283
+epoch:81
+Epoch:081, Test AUC: 0.8280
+epoch:82
+Epoch:082, Test AUC: 0.8286
+epoch:83
+Epoch:083, Test AUC: 0.8291
+epoch:84
+Epoch:084, Test AUC: 0.8295
+epoch:85
+Epoch:085, Test AUC: 0.8297
+epoch:86
+Epoch:086, Test AUC: 0.8297
+epoch:87
+Epoch:087, Test AUC: 0.8301
+epoch:88
+Epoch:088, Test AUC: 0.8297
+epoch:89
+Epoch:089, Test AUC: 0.8297
+epoch:90
+Epoch:090, Test AUC: 0.8296
+epoch:91
+Epoch:091, Test AUC: 0.8300
+epoch:92
+Epoch:092, Test AUC: 0.8305
+epoch:93
+Epoch:093, Test AUC: 0.8301
+epoch:94
+Epoch:094, Test AUC: 0.8298
+epoch:95
+Epoch:095, Test AUC: 0.8297
+epoch:96
+Epoch:096, Test AUC: 0.8300
+epoch:97
+Epoch:097, Test AUC: 0.8301
+epoch:98
+Epoch:098, Test AUC: 0.8303
+epoch:99
+Epoch:099, Test AUC: 0.8304
+Epoch:099, Test AUC: 0.8304
+col:2
+epoch:0
+Epoch:000, Test AUC: 0.8319
+epoch:1
+Epoch:001, Test AUC: 0.8429
+epoch:2
+Epoch:002, Test AUC: 0.8497
+epoch:3
+Epoch:003, Test AUC: 0.8485
+epoch:4
+Epoch:004, Test AUC: 0.8441
+epoch:5
+Epoch:005, Test AUC: 0.8540
+epoch:6
+Epoch:006, Test AUC: 0.8541
+epoch:7
+Epoch:007, Test AUC: 0.8616
+epoch:8
+Epoch:008, Test AUC: 0.8526
+epoch:9
+Epoch:009, Test AUC: 0.8634
+epoch:10
+Epoch:010, Test AUC: 0.8590
+epoch:11
+Epoch:011, Test AUC: 0.8607
+epoch:12
+Epoch:012, Test AUC: 0.8588
+epoch:13
+Epoch:013, Test AUC: 0.8585
+epoch:14
+Epoch:014, Test AUC: 0.8595
+epoch:15
+Epoch:015, Test AUC: 0.8578
+epoch:16
+Epoch:016, Test AUC: 0.8629
+epoch:17
+Epoch:017, Test AUC: 0.8589
+epoch:18
+Epoch:018, Test AUC: 0.8631
+epoch:19
+Epoch:019, Test AUC: 0.8593
+epoch:20
+Epoch:020, Test AUC: 0.8582
+epoch:21
+Epoch:021, Test AUC: 0.8587
+epoch:22
+Epoch:022, Test AUC: 0.8589
+epoch:23
+Epoch:023, Test AUC: 0.8617
+epoch:24
+Epoch:024, Test AUC: 0.8614
+epoch:25
+Epoch:025, Test AUC: 0.8589
+epoch:26
+Epoch:026, Test AUC: 0.8611
+epoch:27
+Epoch:027, Test AUC: 0.8593
+epoch:28
+Epoch:028, Test AUC: 0.8597
+epoch:29
+Epoch:029, Test AUC: 0.8619
+epoch:30
+Epoch:030, Test AUC: 0.8550
+epoch:31
+Epoch:031, Test AUC: 0.8575
+epoch:32
+Epoch:032, Test AUC: 0.8559
+epoch:33
+Epoch:033, Test AUC: 0.8626
+epoch:34
+Epoch:034, Test AUC: 0.8565
+epoch:35
+Epoch:035, Test AUC: 0.8644
+epoch:36
+Epoch:036, Test AUC: 0.8601
+epoch:37
+Epoch:037, Test AUC: 0.8612
+epoch:38
+Epoch:038, Test AUC: 0.8633
+epoch:39
+Epoch:039, Test AUC: 0.8611
+epoch:40
+Epoch:040, Test AUC: 0.8589
+epoch:41
+Epoch:041, Test AUC: 0.8579
+epoch:42
+Epoch:042, Test AUC: 0.8579
+epoch:43
+Epoch:043, Test AUC: 0.8585
+epoch:44
+Epoch:044, Test AUC: 0.8597
+epoch:45
+Epoch:045, Test AUC: 0.8583
+epoch:46
+Epoch:046, Test AUC: 0.8594
+epoch:47
+Epoch:047, Test AUC: 0.8601
+epoch:48
+Epoch:048, Test AUC: 0.8585
+epoch:49
+Epoch:049, Test AUC: 0.8579
+epoch:50
+Epoch:050, Test AUC: 0.8600
+epoch:51
+Epoch:051, Test AUC: 0.8582
+epoch:52
+Epoch:052, Test AUC: 0.8597
+epoch:53
+Epoch:053, Test AUC: 0.8591
+epoch:54
+Epoch:054, Test AUC: 0.8582
+epoch:55
+Epoch:055, Test AUC: 0.8593
+epoch:56
+Epoch:056, Test AUC: 0.8617
+epoch:57
+Epoch:057, Test AUC: 0.8593
+epoch:58
+Epoch:058, Test AUC: 0.8613
+epoch:59
+Epoch:059, Test AUC: 0.8616
+epoch:60
+Epoch:060, Test AUC: 0.8590
+epoch:61
+Epoch:061, Test AUC: 0.8570
+epoch:62
+Epoch:062, Test AUC: 0.8580
+epoch:63
+Epoch:063, Test AUC: 0.8575
+epoch:64
+Epoch:064, Test AUC: 0.8595
+epoch:65
+Epoch:065, Test AUC: 0.8589
+epoch:66
+Epoch:066, Test AUC: 0.8578
+epoch:67
+Epoch:067, Test AUC: 0.8585
+epoch:68
+Epoch:068, Test AUC: 0.8582
+epoch:69
+Epoch:069, Test AUC: 0.8583
+epoch:70
+Epoch:070, Test AUC: 0.8580
+epoch:71
+Epoch:071, Test AUC: 0.8581
+epoch:72
+Epoch:072, Test AUC: 0.8575
+epoch:73
+Epoch:073, Test AUC: 0.8579
+epoch:74
+Epoch:074, Test AUC: 0.8567
+epoch:75
+Epoch:075, Test AUC: 0.8581
+epoch:76
+Epoch:076, Test AUC: 0.8574
+epoch:77
+Epoch:077, Test AUC: 0.8582
+epoch:78
+Epoch:078, Test AUC: 0.8572
+epoch:79
+Epoch:079, Test AUC: 0.8578
+epoch:80
+Epoch:080, Test AUC: 0.8573
+epoch:81
+Epoch:081, Test AUC: 0.8576
+epoch:82
+Epoch:082, Test AUC: 0.8577
+epoch:83
+Epoch:083, Test AUC: 0.8575
+epoch:84
+Epoch:084, Test AUC: 0.8575
+epoch:85
+Epoch:085, Test AUC: 0.8576
+epoch:86
+Epoch:086, Test AUC: 0.8577
+epoch:87
+Epoch:087, Test AUC: 0.8579
+epoch:88
+Epoch:088, Test AUC: 0.8578
+epoch:89
+Epoch:089, Test AUC: 0.8579
+epoch:90
+Epoch:090, Test AUC: 0.8578
+epoch:91
+Epoch:091, Test AUC: 0.8576
+epoch:92
+Epoch:092, Test AUC: 0.8578
+epoch:93
+Epoch:093, Test AUC: 0.8578
+epoch:94
+Epoch:094, Test AUC: 0.8578
+epoch:95
+Epoch:095, Test AUC: 0.8579
+epoch:96
+Epoch:096, Test AUC: 0.8577
+epoch:97
+Epoch:097, Test AUC: 0.8577
+epoch:98
+Epoch:098, Test AUC: 0.8578
+epoch:99
+Epoch:099, Test AUC: 0.8578
+Epoch:099, Test AUC: 0.8578
+col:3
+epoch:0
+Epoch:000, Test AUC: 0.7186
+epoch:1
+Epoch:001, Test AUC: 0.7141
+epoch:2
+Epoch:002, Test AUC: 0.7246
+epoch:3
+Epoch:003, Test AUC: 0.7289
+epoch:4
+Epoch:004, Test AUC: 0.7779
+epoch:5
+Epoch:005, Test AUC: 0.7800
+epoch:6
+Epoch:006, Test AUC: 0.7778
+epoch:7
+Epoch:007, Test AUC: 0.7829
+epoch:8
+Epoch:008, Test AUC: 0.8037
+epoch:9
+Epoch:009, Test AUC: 0.8031
+epoch:10
+Epoch:010, Test AUC: 0.7879
+epoch:11
+Epoch:011, Test AUC: 0.7923
+epoch:12
+Epoch:012, Test AUC: 0.7991
+epoch:13
+Epoch:013, Test AUC: 0.8023
+epoch:14
+Epoch:014, Test AUC: 0.8073
+epoch:15
+Epoch:015, Test AUC: 0.8130
+epoch:16
+Epoch:016, Test AUC: 0.8189
+epoch:17
+Epoch:017, Test AUC: 0.8113
+epoch:18
+Epoch:018, Test AUC: 0.8015
+epoch:19
+Epoch:019, Test AUC: 0.7994
+epoch:20
+Epoch:020, Test AUC: 0.7935
+epoch:21
+Epoch:021, Test AUC: 0.8077
+epoch:22
+Epoch:022, Test AUC: 0.8005
+epoch:23
+Epoch:023, Test AUC: 0.8116
+epoch:24
+Epoch:024, Test AUC: 0.8017
+epoch:25
+Epoch:025, Test AUC: 0.8152
+epoch:26
+Epoch:026, Test AUC: 0.8108
+epoch:27
+Epoch:027, Test AUC: 0.8211
+epoch:28
+Epoch:028, Test AUC: 0.8135
+epoch:29
+Epoch:029, Test AUC: 0.8123
+epoch:30
+Epoch:030, Test AUC: 0.8135
+epoch:31
+Epoch:031, Test AUC: 0.8197
+epoch:32
+Epoch:032, Test AUC: 0.8217
+epoch:33
+Epoch:033, Test AUC: 0.8160
+epoch:34
+Epoch:034, Test AUC: 0.8188
+epoch:35
+Epoch:035, Test AUC: 0.8158
+epoch:36
+Epoch:036, Test AUC: 0.8183
+epoch:37
+Epoch:037, Test AUC: 0.8166
+epoch:38
+Epoch:038, Test AUC: 0.8174
+epoch:39
+Epoch:039, Test AUC: 0.8159
+epoch:40
+Epoch:040, Test AUC: 0.8143
+epoch:41
+Epoch:041, Test AUC: 0.8094
+epoch:42
+Epoch:042, Test AUC: 0.8159
+epoch:43
+Epoch:043, Test AUC: 0.8148
+epoch:44
+Epoch:044, Test AUC: 0.8137
+epoch:45
+Epoch:045, Test AUC: 0.8118
+epoch:46
+Epoch:046, Test AUC: 0.8128
+epoch:47
+Epoch:047, Test AUC: 0.8138
+epoch:48
+Epoch:048, Test AUC: 0.8155
+epoch:49
+Epoch:049, Test AUC: 0.8142
+epoch:50
+Epoch:050, Test AUC: 0.8145
+epoch:51
+Epoch:051, Test AUC: 0.8138
+epoch:52
+Epoch:052, Test AUC: 0.8111
+epoch:53
+Epoch:053, Test AUC: 0.8146
+epoch:54
+Epoch:054, Test AUC: 0.8137
+epoch:55
+Epoch:055, Test AUC: 0.8134
+epoch:56
+Epoch:056, Test AUC: 0.8104
+epoch:57
+Epoch:057, Test AUC: 0.8141
+epoch:58
+Epoch:058, Test AUC: 0.8146
+epoch:59
+Epoch:059, Test AUC: 0.8124
+epoch:60
+Epoch:060, Test AUC: 0.8138
+epoch:61
+Epoch:061, Test AUC: 0.8156
+epoch:62
+Epoch:062, Test AUC: 0.8130
+epoch:63
+Epoch:063, Test AUC: 0.8139
+epoch:64
+Epoch:064, Test AUC: 0.8127
+epoch:65
+Epoch:065, Test AUC: 0.8123
+epoch:66
+Epoch:066, Test AUC: 0.8152
+epoch:67
+Epoch:067, Test AUC: 0.8118
+epoch:68
+Epoch:068, Test AUC: 0.8123
+epoch:69
+Epoch:069, Test AUC: 0.8138
+epoch:70
+Epoch:070, Test AUC: 0.8121
+epoch:71
+Epoch:071, Test AUC: 0.8134
+epoch:72
+Epoch:072, Test AUC: 0.8126
+epoch:73
+Epoch:073, Test AUC: 0.8128
+epoch:74
+Epoch:074, Test AUC: 0.8121
+epoch:75
+Epoch:075, Test AUC: 0.8122
+epoch:76
+Epoch:076, Test AUC: 0.8122
+epoch:77
+Epoch:077, Test AUC: 0.8119
+epoch:78
+Epoch:078, Test AUC: 0.8115
+epoch:79
+Epoch:079, Test AUC: 0.8113
+epoch:80
+Epoch:080, Test AUC: 0.8106
+epoch:81
+Epoch:081, Test AUC: 0.8105
+epoch:82
+Epoch:082, Test AUC: 0.8099
+epoch:83
+Epoch:083, Test AUC: 0.8097
+epoch:84
+Epoch:084, Test AUC: 0.8098
+epoch:85
+Epoch:085, Test AUC: 0.8089
+epoch:86
+Epoch:086, Test AUC: 0.8091
+epoch:87
+Epoch:087, Test AUC: 0.8088
+epoch:88
+Epoch:088, Test AUC: 0.8090
+epoch:89
+Epoch:089, Test AUC: 0.8089
+epoch:90
+Epoch:090, Test AUC: 0.8091
+epoch:91
+Epoch:091, Test AUC: 0.8081
+epoch:92
+Epoch:092, Test AUC: 0.8080
+epoch:93
+Epoch:093, Test AUC: 0.8081
+epoch:94
+Epoch:094, Test AUC: 0.8074
+epoch:95
+Epoch:095, Test AUC: 0.8071
+epoch:96
+Epoch:096, Test AUC: 0.8074
+epoch:97
+Epoch:097, Test AUC: 0.8074
+epoch:98
+Epoch:098, Test AUC: 0.8073
+epoch:99
+Epoch:099, Test AUC: 0.8066
+Epoch:099, Test AUC: 0.8066
+col:4
+epoch:0
+Epoch:000, Test AUC: 0.6769
+epoch:1
+Epoch:001, Test AUC: 0.6717
+epoch:2
+Epoch:002, Test AUC: 0.6764
+epoch:3
+Epoch:003, Test AUC: 0.6796
+epoch:4
+Epoch:004, Test AUC: 0.6860
+epoch:5
+Epoch:005, Test AUC: 0.6863
+epoch:6
+Epoch:006, Test AUC: 0.6904
+epoch:7
+Epoch:007, Test AUC: 0.6813
+epoch:8
+Epoch:008, Test AUC: 0.6956
+epoch:9
+Epoch:009, Test AUC: 0.6897
+epoch:10
+Epoch:010, Test AUC: 0.6940
+epoch:11
+Epoch:011, Test AUC: 0.6947
+epoch:12
+Epoch:012, Test AUC: 0.6918
+epoch:13
+Epoch:013, Test AUC: 0.6962
+epoch:14
+Epoch:014, Test AUC: 0.6988
+epoch:15
+Epoch:015, Test AUC: 0.7037
+epoch:16
+Epoch:016, Test AUC: 0.7028
+epoch:17
+Epoch:017, Test AUC: 0.7048
+epoch:18
+Epoch:018, Test AUC: 0.7058
+epoch:19
+Epoch:019, Test AUC: 0.6993
+epoch:20
+Epoch:020, Test AUC: 0.7103
+epoch:21
+Epoch:021, Test AUC: 0.7086
+epoch:22
+Epoch:022, Test AUC: 0.7071
+epoch:23
+Epoch:023, Test AUC: 0.7056
+epoch:24
+Epoch:024, Test AUC: 0.7048
+epoch:25
+Epoch:025, Test AUC: 0.7106
+epoch:26
+Epoch:026, Test AUC: 0.7035
+epoch:27
+Epoch:027, Test AUC: 0.7099
+epoch:28
+Epoch:028, Test AUC: 0.7048
+epoch:29
+Epoch:029, Test AUC: 0.7041
+epoch:30
+Epoch:030, Test AUC: 0.7053
+epoch:31
+Epoch:031, Test AUC: 0.7099
+epoch:32
+Epoch:032, Test AUC: 0.7059
+epoch:33
+Epoch:033, Test AUC: 0.7077
+epoch:34
+Epoch:034, Test AUC: 0.7077
+epoch:35
+Epoch:035, Test AUC: 0.7080
+epoch:36
+Epoch:036, Test AUC: 0.7134
+epoch:37
+Epoch:037, Test AUC: 0.7144
+epoch:38
+Epoch:038, Test AUC: 0.7131
+epoch:39
+Epoch:039, Test AUC: 0.7164
+epoch:40
+Epoch:040, Test AUC: 0.7074
+epoch:41
+Epoch:041, Test AUC: 0.7094
+epoch:42
+Epoch:042, Test AUC: 0.7086
+epoch:43
+Epoch:043, Test AUC: 0.7089
+epoch:44
+Epoch:044, Test AUC: 0.7080
+epoch:45
+Epoch:045, Test AUC: 0.7099
+epoch:46
+Epoch:046, Test AUC: 0.7066
+epoch:47
+Epoch:047, Test AUC: 0.7085
+epoch:48
+Epoch:048, Test AUC: 0.7102
+epoch:49
+Epoch:049, Test AUC: 0.7117
+epoch:50
+Epoch:050, Test AUC: 0.7125
+epoch:51
+Epoch:051, Test AUC: 0.7114
+epoch:52
+Epoch:052, Test AUC: 0.7079
+epoch:53
+Epoch:053, Test AUC: 0.7142
+epoch:54
+Epoch:054, Test AUC: 0.7088
+epoch:55
+Epoch:055, Test AUC: 0.7076
+epoch:56
+Epoch:056, Test AUC: 0.7083
+epoch:57
+Epoch:057, Test AUC: 0.7062
+epoch:58
+Epoch:058, Test AUC: 0.7081
+epoch:59
+Epoch:059, Test AUC: 0.7090
+epoch:60
+Epoch:060, Test AUC: 0.7065
+epoch:61
+Epoch:061, Test AUC: 0.7083
+epoch:62
+Epoch:062, Test AUC: 0.7082
+epoch:63
+Epoch:063, Test AUC: 0.7112
+epoch:64
+Epoch:064, Test AUC: 0.7099
+epoch:65
+Epoch:065, Test AUC: 0.7114
+epoch:66
+Epoch:066, Test AUC: 0.7092
+epoch:67
+Epoch:067, Test AUC: 0.7105
+epoch:68
+Epoch:068, Test AUC: 0.7103
+epoch:69
+Epoch:069, Test AUC: 0.7092
+epoch:70
+Epoch:070, Test AUC: 0.7088
+epoch:71
+Epoch:071, Test AUC: 0.7097
+epoch:72
+Epoch:072, Test AUC: 0.7083
+epoch:73
+Epoch:073, Test AUC: 0.7040
+epoch:74
+Epoch:074, Test AUC: 0.7062
+epoch:75
+Epoch:075, Test AUC: 0.7043
+epoch:76
+Epoch:076, Test AUC: 0.7054
+epoch:77
+Epoch:077, Test AUC: 0.7045
+epoch:78
+Epoch:078, Test AUC: 0.7052
+epoch:79
+Epoch:079, Test AUC: 0.7042
+epoch:80
+Epoch:080, Test AUC: 0.7039
+epoch:81
+Epoch:081, Test AUC: 0.7037
+epoch:82
+Epoch:082, Test AUC: 0.7030
+epoch:83
+Epoch:083, Test AUC: 0.7030
+epoch:84
+Epoch:084, Test AUC: 0.7028
+epoch:85
+Epoch:085, Test AUC: 0.7032
+epoch:86
+Epoch:086, Test AUC: 0.7025
+epoch:87
+Epoch:087, Test AUC: 0.7025
+epoch:88
+Epoch:088, Test AUC: 0.7022
+epoch:89
+Epoch:089, Test AUC: 0.7021
+epoch:90
+Epoch:090, Test AUC: 0.7019
+epoch:91
+Epoch:091, Test AUC: 0.7018
+epoch:92
+Epoch:092, Test AUC: 0.7013
+epoch:93
+Epoch:093, Test AUC: 0.7014
+epoch:94
+Epoch:094, Test AUC: 0.7011
+epoch:95
+Epoch:095, Test AUC: 0.7010
+epoch:96
+Epoch:096, Test AUC: 0.7003
+epoch:97
+Epoch:097, Test AUC: 0.7003
+epoch:98
+Epoch:098, Test AUC: 0.7001
+epoch:99
+Epoch:099, Test AUC: 0.7002
+Epoch:099, Test AUC: 0.7002
+col:5
+epoch:0
+Epoch:000, Test AUC: 0.6805
+epoch:1
+Epoch:001, Test AUC: 0.6751
+epoch:2
+Epoch:002, Test AUC: 0.6669
+epoch:3
+Epoch:003, Test AUC: 0.6744
+epoch:4
+Epoch:004, Test AUC: 0.6808
+epoch:5
+Epoch:005, Test AUC: 0.6757
+epoch:6
+Epoch:006, Test AUC: 0.6833
+epoch:7
+Epoch:007, Test AUC: 0.6842
+epoch:8
+Epoch:008, Test AUC: 0.6733
+epoch:9
+Epoch:009, Test AUC: 0.6817
+epoch:10
+Epoch:010, Test AUC: 0.6929
+epoch:11
+Epoch:011, Test AUC: 0.6763
+epoch:12
+Epoch:012, Test AUC: 0.6874
+epoch:13
+Epoch:013, Test AUC: 0.6914
+epoch:14
+Epoch:014, Test AUC: 0.6957
+epoch:15
+Epoch:015, Test AUC: 0.6824
+epoch:16
+Epoch:016, Test AUC: 0.6978
+epoch:17
+Epoch:017, Test AUC: 0.6854
+epoch:18
+Epoch:018, Test AUC: 0.6865
+epoch:19
+Epoch:019, Test AUC: 0.6923
+epoch:20
+Epoch:020, Test AUC: 0.6907
+epoch:21
+Epoch:021, Test AUC: 0.6953
+epoch:22
+Epoch:022, Test AUC: 0.7019
+epoch:23
+Epoch:023, Test AUC: 0.6863
+epoch:24
+Epoch:024, Test AUC: 0.6953
+epoch:25
+Epoch:025, Test AUC: 0.6881
+epoch:26
+Epoch:026, Test AUC: 0.6938
+epoch:27
+Epoch:027, Test AUC: 0.6878
+epoch:28
+Epoch:028, Test AUC: 0.6937
+epoch:29
+Epoch:029, Test AUC: 0.6957
+epoch:30
+Epoch:030, Test AUC: 0.6930
+epoch:31
+Epoch:031, Test AUC: 0.6978
+epoch:32
+Epoch:032, Test AUC: 0.6985
+epoch:33
+Epoch:033, Test AUC: 0.7082
+epoch:34
+Epoch:034, Test AUC: 0.6947
+epoch:35
+Epoch:035, Test AUC: 0.6977
+epoch:36
+Epoch:036, Test AUC: 0.6978
+epoch:37
+Epoch:037, Test AUC: 0.6982
+epoch:38
+Epoch:038, Test AUC: 0.6994
+epoch:39
+Epoch:039, Test AUC: 0.7048
+epoch:40
+Epoch:040, Test AUC: 0.6931
+epoch:41
+Epoch:041, Test AUC: 0.6977
+epoch:42
+Epoch:042, Test AUC: 0.7012
+epoch:43
+Epoch:043, Test AUC: 0.7003
+epoch:44
+Epoch:044, Test AUC: 0.6990
+epoch:45
+Epoch:045, Test AUC: 0.6977
+epoch:46
+Epoch:046, Test AUC: 0.7004
+epoch:47
+Epoch:047, Test AUC: 0.6996
+epoch:48
+Epoch:048, Test AUC: 0.6939
+epoch:49
+Epoch:049, Test AUC: 0.6960
+epoch:50
+Epoch:050, Test AUC: 0.6980
+epoch:51
+Epoch:051, Test AUC: 0.6980
+epoch:52
+Epoch:052, Test AUC: 0.7002
+epoch:53
+Epoch:053, Test AUC: 0.6955
+epoch:54
+Epoch:054, Test AUC: 0.6982
+epoch:55
+Epoch:055, Test AUC: 0.6964
+epoch:56
+Epoch:056, Test AUC: 0.6962
+epoch:57
+Epoch:057, Test AUC: 0.6957
+epoch:58
+Epoch:058, Test AUC: 0.6980
+epoch:59
+Epoch:059, Test AUC: 0.6985
+epoch:60
+Epoch:060, Test AUC: 0.6960
+epoch:61
+Epoch:061, Test AUC: 0.6980
+epoch:62
+Epoch:062, Test AUC: 0.6960
+epoch:63
+Epoch:063, Test AUC: 0.6973
+epoch:64
+Epoch:064, Test AUC: 0.6974
+epoch:65
+Epoch:065, Test AUC: 0.6976
+epoch:66
+Epoch:066, Test AUC: 0.6990
+epoch:67
+Epoch:067, Test AUC: 0.6948
+epoch:68
+Epoch:068, Test AUC: 0.6979
+epoch:69
+Epoch:069, Test AUC: 0.6989
+epoch:70
+Epoch:070, Test AUC: 0.6965
+epoch:71
+Epoch:071, Test AUC: 0.6972
+epoch:72
+Epoch:072, Test AUC: 0.6973
+epoch:73
+Epoch:073, Test AUC: 0.6967
+epoch:74
+Epoch:074, Test AUC: 0.6981
+epoch:75
+Epoch:075, Test AUC: 0.6980
+epoch:76
+Epoch:076, Test AUC: 0.6979
+epoch:77
+Epoch:077, Test AUC: 0.6977
+epoch:78
+Epoch:078, Test AUC: 0.6981
+epoch:79
+Epoch:079, Test AUC: 0.6982
+epoch:80
+Epoch:080, Test AUC: 0.6980
+epoch:81
+Epoch:081, Test AUC: 0.6994
+epoch:82
+Epoch:082, Test AUC: 0.6992
+epoch:83
+Epoch:083, Test AUC: 0.6995
+epoch:84
+Epoch:084, Test AUC: 0.6997
+epoch:85
+Epoch:085, Test AUC: 0.6998
+epoch:86
+Epoch:086, Test AUC: 0.6995
+epoch:87
+Epoch:087, Test AUC: 0.6999
+epoch:88
+Epoch:088, Test AUC: 0.7005
+epoch:89
+Epoch:089, Test AUC: 0.7004
+epoch:90
+Epoch:090, Test AUC: 0.7009
+epoch:91
+Epoch:091, Test AUC: 0.7007
+epoch:92
+Epoch:092, Test AUC: 0.7009
+epoch:93
+Epoch:093, Test AUC: 0.7006
+epoch:94
+Epoch:094, Test AUC: 0.7007
+epoch:95
+Epoch:095, Test AUC: 0.7008
+epoch:96
+Epoch:096, Test AUC: 0.7009
+epoch:97
+Epoch:097, Test AUC: 0.7013
+epoch:98
+Epoch:098, Test AUC: 0.7015
+epoch:99
+Epoch:099, Test AUC: 0.7017
+Epoch:099, Test AUC: 0.7017
+col:6
+epoch:0
+Epoch:000, Test AUC: 0.6120
+epoch:1
+Epoch:001, Test AUC: 0.6533
+epoch:2
+Epoch:002, Test AUC: 0.6607
+epoch:3
+Epoch:003, Test AUC: 0.6829
+epoch:4
+Epoch:004, Test AUC: 0.6416
+epoch:5
+Epoch:005, Test AUC: 0.6582
+epoch:6
+Epoch:006, Test AUC: 0.7097
+epoch:7
+Epoch:007, Test AUC: 0.6749
+epoch:8
+Epoch:008, Test AUC: 0.6455
+epoch:9
+Epoch:009, Test AUC: 0.6742
+epoch:10
+Epoch:010, Test AUC: 0.6865
+epoch:11
+Epoch:011, Test AUC: 0.6482
+epoch:12
+Epoch:012, Test AUC: 0.6728
+epoch:13
+Epoch:013, Test AUC: 0.6670
+epoch:14
+Epoch:014, Test AUC: 0.6658
+epoch:15
+Epoch:015, Test AUC: 0.6613
+epoch:16
+Epoch:016, Test AUC: 0.6672
+epoch:17
+Epoch:017, Test AUC: 0.6590
+epoch:18
+Epoch:018, Test AUC: 0.6465
+epoch:19
+Epoch:019, Test AUC: 0.6523
+epoch:20
+Epoch:020, Test AUC: 0.6450
+epoch:21
+Epoch:021, Test AUC: 0.6515
+epoch:22
+Epoch:022, Test AUC: 0.6528
+epoch:23
+Epoch:023, Test AUC: 0.6482
+epoch:24
+Epoch:024, Test AUC: 0.6522
+epoch:25
+Epoch:025, Test AUC: 0.6585
+epoch:26
+Epoch:026, Test AUC: 0.6498
+epoch:27
+Epoch:027, Test AUC: 0.6578
+epoch:28
+Epoch:028, Test AUC: 0.6636
+epoch:29
+Epoch:029, Test AUC: 0.6599
+epoch:30
+Epoch:030, Test AUC: 0.6621
+epoch:31
+Epoch:031, Test AUC: 0.6567
+epoch:32
+Epoch:032, Test AUC: 0.6615
+epoch:33
+Epoch:033, Test AUC: 0.6678
+epoch:34
+Epoch:034, Test AUC: 0.6691
+epoch:35
+Epoch:035, Test AUC: 0.6824
+epoch:36
+Epoch:036, Test AUC: 0.6710
+epoch:37
+Epoch:037, Test AUC: 0.6755
+epoch:38
+Epoch:038, Test AUC: 0.6935
+epoch:39
+Epoch:039, Test AUC: 0.6836
+epoch:40
+Epoch:040, Test AUC: 0.7083
+epoch:41
+Epoch:041, Test AUC: 0.7086
+epoch:42
+Epoch:042, Test AUC: 0.6941
+epoch:43
+Epoch:043, Test AUC: 0.7105
+epoch:44
+Epoch:044, Test AUC: 0.7061
+epoch:45
+Epoch:045, Test AUC: 0.7026
+epoch:46
+Epoch:046, Test AUC: 0.7141
+epoch:47
+Epoch:047, Test AUC: 0.7045
+epoch:48
+Epoch:048, Test AUC: 0.7002
+epoch:49
+Epoch:049, Test AUC: 0.7035
+epoch:50
+Epoch:050, Test AUC: 0.6900
+epoch:51
+Epoch:051, Test AUC: 0.6949
+epoch:52
+Epoch:052, Test AUC: 0.6923
+epoch:53
+Epoch:053, Test AUC: 0.6931
+epoch:54
+Epoch:054, Test AUC: 0.6893
+epoch:55
+Epoch:055, Test AUC: 0.7020
+epoch:56
+Epoch:056, Test AUC: 0.7005
+epoch:57
+Epoch:057, Test AUC: 0.6950
+epoch:58
+Epoch:058, Test AUC: 0.7014
+epoch:59
+Epoch:059, Test AUC: 0.6939
+epoch:60
+Epoch:060, Test AUC: 0.6971
+epoch:61
+Epoch:061, Test AUC: 0.6978
+epoch:62
+Epoch:062, Test AUC: 0.6963
+epoch:63
+Epoch:063, Test AUC: 0.6957
+epoch:64
+Epoch:064, Test AUC: 0.6725
+epoch:65
+Epoch:065, Test AUC: 0.6870
+epoch:66
+Epoch:066, Test AUC: 0.6820
+epoch:67
+Epoch:067, Test AUC: 0.6622
+epoch:68
+Epoch:068, Test AUC: 0.6832
+epoch:69
+Epoch:069, Test AUC: 0.6781
+epoch:70
+Epoch:070, Test AUC: 0.6890
+epoch:71
+Epoch:071, Test AUC: 0.6715
+epoch:72
+Epoch:072, Test AUC: 0.6798
+epoch:73
+Epoch:073, Test AUC: 0.6889
+epoch:74
+Epoch:074, Test AUC: 0.6736
+epoch:75
+Epoch:075, Test AUC: 0.6802
+epoch:76
+Epoch:076, Test AUC: 0.6687
+epoch:77
+Epoch:077, Test AUC: 0.6727
+epoch:78
+Epoch:078, Test AUC: 0.6843
+epoch:79
+Epoch:079, Test AUC: 0.6770
+epoch:80
+Epoch:080, Test AUC: 0.6815
+epoch:81
+Epoch:081, Test AUC: 0.6811
+epoch:82
+Epoch:082, Test AUC: 0.6733
+epoch:83
+Epoch:083, Test AUC: 0.6731
+epoch:84
+Epoch:084, Test AUC: 0.6750
+epoch:85
+Epoch:085, Test AUC: 0.6692
+epoch:86
+Epoch:086, Test AUC: 0.6704
+epoch:87
+Epoch:087, Test AUC: 0.6769
+epoch:88
+Epoch:088, Test AUC: 0.6719
+epoch:89
+Epoch:089, Test AUC: 0.6666
+epoch:90
+Epoch:090, Test AUC: 0.6788
+epoch:91
+Epoch:091, Test AUC: 0.6665
+epoch:92
+Epoch:092, Test AUC: 0.6671
+epoch:93
+Epoch:093, Test AUC: 0.6653
+epoch:94
+Epoch:094, Test AUC: 0.6728
+epoch:95
+Epoch:095, Test AUC: 0.6620
+epoch:96
+Epoch:096, Test AUC: 0.6626
+epoch:97
+Epoch:097, Test AUC: 0.6602
+epoch:98
+Epoch:098, Test AUC: 0.6598
+epoch:99
+Epoch:099, Test AUC: 0.6623
+Epoch:099, Test AUC: 0.6623
+col:7
+epoch:0
+Epoch:000, Test AUC: 0.7200
+epoch:1
+Epoch:001, Test AUC: 0.7315
+epoch:2
+Epoch:002, Test AUC: 0.7335
+epoch:3
+Epoch:003, Test AUC: 0.7366
+epoch:4
+Epoch:004, Test AUC: 0.7470
+epoch:5
+Epoch:005, Test AUC: 0.7492
+epoch:6
+Epoch:006, Test AUC: 0.7531
+epoch:7
+Epoch:007, Test AUC: 0.7595
+epoch:8
+Epoch:008, Test AUC: 0.7638
+epoch:9
+Epoch:009, Test AUC: 0.7748
+epoch:10
+Epoch:010, Test AUC: 0.7801
+epoch:11
+Epoch:011, Test AUC: 0.7718
+epoch:12
+Epoch:012, Test AUC: 0.7734
+epoch:13
+Epoch:013, Test AUC: 0.7803
+epoch:14
+Epoch:014, Test AUC: 0.7805
+epoch:15
+Epoch:015, Test AUC: 0.7894
+epoch:16
+Epoch:016, Test AUC: 0.7883
+epoch:17
+Epoch:017, Test AUC: 0.7922
+epoch:18
+Epoch:018, Test AUC: 0.7918
+epoch:19
+Epoch:019, Test AUC: 0.7900
+epoch:20
+Epoch:020, Test AUC: 0.7909
+epoch:21
+Epoch:021, Test AUC: 0.7886
+epoch:22
+Epoch:022, Test AUC: 0.7819
+epoch:23
+Epoch:023, Test AUC: 0.7834
+epoch:24
+Epoch:024, Test AUC: 0.7855
+epoch:25
+Epoch:025, Test AUC: 0.7872
+epoch:26
+Epoch:026, Test AUC: 0.7840
+epoch:27
+Epoch:027, Test AUC: 0.7825
+epoch:28
+Epoch:028, Test AUC: 0.7879
+epoch:29
+Epoch:029, Test AUC: 0.7908
+epoch:30
+Epoch:030, Test AUC: 0.7876
+epoch:31
+Epoch:031, Test AUC: 0.7860
+epoch:32
+Epoch:032, Test AUC: 0.7919
+epoch:33
+Epoch:033, Test AUC: 0.7966
+epoch:34
+Epoch:034, Test AUC: 0.7909
+epoch:35
+Epoch:035, Test AUC: 0.7947
+epoch:36
+Epoch:036, Test AUC: 0.7937
+epoch:37
+Epoch:037, Test AUC: 0.7917
+epoch:38
+Epoch:038, Test AUC: 0.7972
+epoch:39
+Epoch:039, Test AUC: 0.7944
+epoch:40
+Epoch:040, Test AUC: 0.7969
+epoch:41
+Epoch:041, Test AUC: 0.7964
+epoch:42
+Epoch:042, Test AUC: 0.7974
+epoch:43
+Epoch:043, Test AUC: 0.7920
+epoch:44
+Epoch:044, Test AUC: 0.7926
+epoch:45
+Epoch:045, Test AUC: 0.7946
+epoch:46
+Epoch:046, Test AUC: 0.7957
+epoch:47
+Epoch:047, Test AUC: 0.7957
+epoch:48
+Epoch:048, Test AUC: 0.7960
+epoch:49
+Epoch:049, Test AUC: 0.7996
+epoch:50
+Epoch:050, Test AUC: 0.7995
+epoch:51
+Epoch:051, Test AUC: 0.7995
+epoch:52
+Epoch:052, Test AUC: 0.7994
+epoch:53
+Epoch:053, Test AUC: 0.7976
+epoch:54
+Epoch:054, Test AUC: 0.7975
+epoch:55
+Epoch:055, Test AUC: 0.7964
+epoch:56
+Epoch:056, Test AUC: 0.7941
+epoch:57
+Epoch:057, Test AUC: 0.7928
+epoch:58
+Epoch:058, Test AUC: 0.7928
+epoch:59
+Epoch:059, Test AUC: 0.7950
+epoch:60
+Epoch:060, Test AUC: 0.7935
+epoch:61
+Epoch:061, Test AUC: 0.7924
+epoch:62
+Epoch:062, Test AUC: 0.7922
+epoch:63
+Epoch:063, Test AUC: 0.7936
+epoch:64
+Epoch:064, Test AUC: 0.7911
+epoch:65
+Epoch:065, Test AUC: 0.7912
+epoch:66
+Epoch:066, Test AUC: 0.7909
+epoch:67
+Epoch:067, Test AUC: 0.7880
+epoch:68
+Epoch:068, Test AUC: 0.7907
+epoch:69
+Epoch:069, Test AUC: 0.7902
+epoch:70
+Epoch:070, Test AUC: 0.7914
+epoch:71
+Epoch:071, Test AUC: 0.7886
+epoch:72
+Epoch:072, Test AUC: 0.7890
+epoch:73
+Epoch:073, Test AUC: 0.7894
+epoch:74
+Epoch:074, Test AUC: 0.7867
+epoch:75
+Epoch:075, Test AUC: 0.7869
+epoch:76
+Epoch:076, Test AUC: 0.7862
+epoch:77
+Epoch:077, Test AUC: 0.7870
+epoch:78
+Epoch:078, Test AUC: 0.7876
+epoch:79
+Epoch:079, Test AUC: 0.7881
+epoch:80
+Epoch:080, Test AUC: 0.7872
+epoch:81
+Epoch:081, Test AUC: 0.7867
+epoch:82
+Epoch:082, Test AUC: 0.7842
+epoch:83
+Epoch:083, Test AUC: 0.7848
+epoch:84
+Epoch:084, Test AUC: 0.7856
+epoch:85
+Epoch:085, Test AUC: 0.7849
+epoch:86
+Epoch:086, Test AUC: 0.7850
+epoch:87
+Epoch:087, Test AUC: 0.7846
+epoch:88
+Epoch:088, Test AUC: 0.7851
+epoch:89
+Epoch:089, Test AUC: 0.7861
+epoch:90
+Epoch:090, Test AUC: 0.7856
+epoch:91
+Epoch:091, Test AUC: 0.7851
+epoch:92
+Epoch:092, Test AUC: 0.7853
+epoch:93
+Epoch:093, Test AUC: 0.7852
+epoch:94
+Epoch:094, Test AUC: 0.7854
+epoch:95
+Epoch:095, Test AUC: 0.7856
+epoch:96
+Epoch:096, Test AUC: 0.7852
+epoch:97
+Epoch:097, Test AUC: 0.7851
+epoch:98
+Epoch:098, Test AUC: 0.7852
+epoch:99
+Epoch:099, Test AUC: 0.7850
+Epoch:099, Test AUC: 0.7850
+col:8
+epoch:0
+Epoch:000, Test AUC: 0.7977
+epoch:1
+Epoch:001, Test AUC: 0.7849
+epoch:2
+Epoch:002, Test AUC: 0.7821
+epoch:3
+Epoch:003, Test AUC: 0.7639
+epoch:4
+Epoch:004, Test AUC: 0.7488
+epoch:5
+Epoch:005, Test AUC: 0.7994
+epoch:6
+Epoch:006, Test AUC: 0.7657
+epoch:7
+Epoch:007, Test AUC: 0.7756
+epoch:8
+Epoch:008, Test AUC: 0.7792
+epoch:9
+Epoch:009, Test AUC: 0.7562
+epoch:10
+Epoch:010, Test AUC: 0.7684
+epoch:11
+Epoch:011, Test AUC: 0.7654
+epoch:12
+Epoch:012, Test AUC: 0.7543
+epoch:13
+Epoch:013, Test AUC: 0.7734
+epoch:14
+Epoch:014, Test AUC: 0.7681
+epoch:15
+Epoch:015, Test AUC: 0.7703
+epoch:16
+Epoch:016, Test AUC: 0.7730
+epoch:17
+Epoch:017, Test AUC: 0.7605
+epoch:18
+Epoch:018, Test AUC: 0.7515
+epoch:19
+Epoch:019, Test AUC: 0.7702
+epoch:20
+Epoch:020, Test AUC: 0.7324
+epoch:21
+Epoch:021, Test AUC: 0.7505
+epoch:22
+Epoch:022, Test AUC: 0.7469
+epoch:23
+Epoch:023, Test AUC: 0.7543
+epoch:24
+Epoch:024, Test AUC: 0.7513
+epoch:25
+Epoch:025, Test AUC: 0.7650
+epoch:26
+Epoch:026, Test AUC: 0.7709
+epoch:27
+Epoch:027, Test AUC: 0.7716
+epoch:28
+Epoch:028, Test AUC: 0.7672
+epoch:29
+Epoch:029, Test AUC: 0.7698
+epoch:30
+Epoch:030, Test AUC: 0.7640
+epoch:31
+Epoch:031, Test AUC: 0.7649
+epoch:32
+Epoch:032, Test AUC: 0.7706
+epoch:33
+Epoch:033, Test AUC: 0.7684
+epoch:34
+Epoch:034, Test AUC: 0.7659
+epoch:35
+Epoch:035, Test AUC: 0.7698
+epoch:36
+Epoch:036, Test AUC: 0.7636
+epoch:37
+Epoch:037, Test AUC: 0.7656
+epoch:38
+Epoch:038, Test AUC: 0.7677
+epoch:39
+Epoch:039, Test AUC: 0.7709
+epoch:40
+Epoch:040, Test AUC: 0.7643
+epoch:41
+Epoch:041, Test AUC: 0.7759
+epoch:42
+Epoch:042, Test AUC: 0.7678
+epoch:43
+Epoch:043, Test AUC: 0.7663
+epoch:44
+Epoch:044, Test AUC: 0.7673
+epoch:45
+Epoch:045, Test AUC: 0.7565
+epoch:46
+Epoch:046, Test AUC: 0.7674
+epoch:47
+Epoch:047, Test AUC: 0.7662
+epoch:48
+Epoch:048, Test AUC: 0.7619
+epoch:49
+Epoch:049, Test AUC: 0.7520
+epoch:50
+Epoch:050, Test AUC: 0.7680
+epoch:51
+Epoch:051, Test AUC: 0.7617
+epoch:52
+Epoch:052, Test AUC: 0.7571
+epoch:53
+Epoch:053, Test AUC: 0.7585
+epoch:54
+Epoch:054, Test AUC: 0.7676
+epoch:55
+Epoch:055, Test AUC: 0.7651
+epoch:56
+Epoch:056, Test AUC: 0.7625
+epoch:57
+Epoch:057, Test AUC: 0.7677
+epoch:58
+Epoch:058, Test AUC: 0.7686
+epoch:59
+Epoch:059, Test AUC: 0.7713
+epoch:60
+Epoch:060, Test AUC: 0.7681
+epoch:61
+Epoch:061, Test AUC: 0.7687
+epoch:62
+Epoch:062, Test AUC: 0.7682
+epoch:63
+Epoch:063, Test AUC: 0.7687
+epoch:64
+Epoch:064, Test AUC: 0.7685
+epoch:65
+Epoch:065, Test AUC: 0.7674
+epoch:66
+Epoch:066, Test AUC: 0.7655
+epoch:67
+Epoch:067, Test AUC: 0.7683
+epoch:68
+Epoch:068, Test AUC: 0.7648
+epoch:69
+Epoch:069, Test AUC: 0.7677
+epoch:70
+Epoch:070, Test AUC: 0.7688
+epoch:71
+Epoch:071, Test AUC: 0.7677
+epoch:72
+Epoch:072, Test AUC: 0.7668
+epoch:73
+Epoch:073, Test AUC: 0.7685
+epoch:74
+Epoch:074, Test AUC: 0.7679
+epoch:75
+Epoch:075, Test AUC: 0.7668
+epoch:76
+Epoch:076, Test AUC: 0.7637
+epoch:77
+Epoch:077, Test AUC: 0.7643
+epoch:78
+Epoch:078, Test AUC: 0.7627
+epoch:79

@@ -45,7 +45,7 @@ test_num = 200#num_data - train_num - val_num
 num_extra_data = 0
 train_num = ori_train_num + num_extra_data
 train_dataset = Tox21[:1000] + Tox21[9000:(9000+num_extra_data)]
-test_dataset = Tox21[7631:7631+test_num]
+test_dataset = Tox21[7631-test_num:7831]
 
 
 #sample_index =999

@@ -42,10 +42,10 @@ val_num = int(num_data * 0.0)
 test_num = 200#num_data - train_num - val_num
 #print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
-num_extra_data = 4000
+num_extra_data = 0
 train_num = ori_train_num + num_extra_data
 train_dataset = Tox21[:1000] + Tox21[9000:(9000+num_extra_data)]
-test_dataset = Tox21[7631:7831]
+test_dataset = Tox21[7631:7631+test_num]
 
 
 #sample_index =999

@@ -1,3 +1,4 @@
+# base script
 import torch
 import torch.nn.functional as F
 from torch.nn import Linear, Tanh, Softmax, Sigmoid
@@ -14,6 +15,7 @@ import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
 import rdkit.Chem.EState as EState
 import rdkit.Chem.rdPartialCharges as rdPartialCharges
 from sklearn.metrics import roc_auc_score
+from tqdm import tqdm
 
 from molecule_processing import batch2attributes, num_node_features, num_edge_features
  
@@ -23,7 +25,7 @@ inner_atom_dim = 512
 batch_size = 64
 hidden_activation = Softmax()#Tanh()
 conv_depth = 5
-target_col = [x for x in range(1)]
+target_col = [x for x in range(6,12)]
 
 print(f"target_col:{target_col}")
 Tox21 = MoleculeNet(root = "../data/raw/Tox21", name = "Tox21")
@@ -31,15 +33,16 @@ Tox21 = MoleculeNet(root = "../data/raw/Tox21", name = "Tox21")
 #print("============")
 #print(f"num of data:{len(Tox21)}")
 
-num_data = len(Tox21)
+num_data = 1000#len(Tox21)
 train_num = int(num_data * 0.8)
 val_num = int(num_data * 0.0)
 test_num = num_data - train_num - val_num
 print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
 train_loader = DataLoader(Tox21[:train_num], batch_size = batch_size, shuffle = False)
-validate_loader = DataLoader(Tox21[train_num:train_num+val_num], batch_size = batch_size, shuffle = False)
-test_loader = DataLoader(Tox21[-test_num:], batch_size = test_num, shuffle = False)
+#validate_loader = DataLoader(Tox21[train_num:train_num+val_num], batch_size = batch_size, shuffle = False)
+test_loader = DataLoader(Tox21[7831-test_num:7831], batch_size = test_num, shuffle = False)
+
 
 class AtomBondConv(MessagePassing):
 	def __init__(self, x_dim, edge_attr_dim):
@@ -209,7 +212,7 @@ col_result = []
 for col in target_col:
 	print(f"col:{col}")
 	test_sc = 0
-	for epoch in range(num_epoches):
+	for epoch in tqdm(range(num_epoches)):
 		optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
 		train(train_loader, False, col)#epoch==(num_epoches-1))
 		#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))

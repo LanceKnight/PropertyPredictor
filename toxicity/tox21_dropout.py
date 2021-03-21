@@ -27,7 +27,7 @@ hidden_activation = Softmax()#Tanh()
 conv_depth = 5
 dropout_rate = 0.2
 scaled_unsupervised_weight = 100
-target_col =[0] #[x for x in range(6,12)]
+target_col =[x for x in range(6,12)]
 
 print(f"target_col:{target_col}")
 Tox21 = MoleculeNet(root = "../data/raw/Tox21", name = "Tox21")

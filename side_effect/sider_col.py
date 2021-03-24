@@ -14,6 +14,7 @@ import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
 import rdkit.Chem.EState as EState
 import rdkit.Chem.rdPartialCharges as rdPartialCharges
 from sklearn.metrics import roc_auc_score
+from tqdm import tqdm
 
 from molecule_processing import batch2attributes, num_node_features, num_edge_features
  
@@ -23,7 +24,7 @@ inner_atom_dim = 512
 batch_size = 64
 hidden_activation = Softmax()#Tanh()
 conv_depth = 5
-target_col = [3]#[x for x in range(4,27)]
+target_col = [x for x in range(0,6)]
 
 print(f"target_col:{target_col}")
 SIDER = MoleculeNet(root = "../data/raw/SIDER", name = "SIDER")
@@ -209,12 +210,13 @@ col_result = []
 for col in target_col:
 	print(f"col:{col}")
 	test_sc = 0
-	for epoch in range(num_epoches):
+	for epoch in tqdm(range(num_epoches)):
 		optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
 		train(train_loader, False, col)#epoch==(num_epoches-1))
 		#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
 		test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
 		#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
-		print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
+		if(epoch==num_epoches-1):
+			print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
 	col_result.append(col_result)
-print(col_result)
+#print(col_result)

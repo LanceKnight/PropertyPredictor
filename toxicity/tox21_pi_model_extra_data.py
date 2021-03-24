@@ -42,13 +42,14 @@ val_num = int(num_data * 0.0)
 test_num = 200#num_data - train_num - val_num
 #print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
-num_extra_data = 0
+num_extra_data = 8000
+
 train_num = ori_train_num + num_extra_data
 train_dataset = Tox21[:1000] + Tox21[9000:(9000+num_extra_data)]
-test_dataset = Tox21[7631-test_num:7831]
+test_dataset = Tox21[7831-test_num:7831]
 
-
-#sample_index =999
+#sample_index =9000+num_extra_data
+#print(f"sample:{Tox21[sample_index]}")
 #print(f"sample: {train_dataset[sample_index].smiles}  y:{train_dataset[sample_index].y}")
 
 train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
@@ -57,7 +58,7 @@ test_loader = DataLoader(test_dataset, batch_size = test_num, shuffle = False)
 
 #print(f"train_num = {len(train_dataset)}, val_num = {len(validate_loader)}, test_num = {len(test_dataset)}")
 
-print(f"train_num = {len(train_dataset)}, test_num = {len(test_dataset)}")
+print(f"original_train_num = {ori_train_num} train_num = {len(train_dataset)}, test_num = {len(test_dataset)}")
 
 class AtomBondConv(MessagePassing):
 	def __init__(self, x_dim, edge_attr_dim):

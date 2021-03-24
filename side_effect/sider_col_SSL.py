@@ -1,3 +1,4 @@
+# only add native perturbation after 20% of training
 import torch
 import torch.nn.functional as F
 from torch.nn import Linear, Tanh, Softmax, Sigmoid
@@ -14,6 +15,7 @@ import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
 import rdkit.Chem.EState as EState
 import rdkit.Chem.rdPartialCharges as rdPartialCharges
 from sklearn.metrics import roc_auc_score
+from tqdm import tqdm
 
 from molecule_processing import batch2attributes, num_node_features, num_edge_features
  
@@ -23,23 +25,30 @@ inner_atom_dim = 512
 batch_size = 64
 hidden_activation = Softmax()#Tanh()
 conv_depth = 5
-target_col = [3]#[x for x in range(4,27)]
+noise_lvl = 0.3
+add_noise_train_perc = 0.2
+target_col = [x for x in range(0,6)]
 
 print(f"target_col:{target_col}")
-SIDER = MoleculeNet(root = "../data/raw/SIDER", name = "SIDER")
+Sider = MoleculeNet(root = "../data/raw/SIDER", name = "SIDER")
 #print("data info:")
 #print("============")
-#print(f"num of data:{len(SIDER)}")
+#print(f"num of data:{len(Sider)}")
 
-num_data = len(SIDER)
+num_data = len(Sider)
 train_num = int(num_data * 0.8)
 val_num = int(num_data * 0.0)
 test_num = num_data - train_num - val_num
 print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
-train_loader = DataLoader(SIDER[:train_num], batch_size = batch_size, shuffle = False)
-validate_loader = DataLoader(SIDER[train_num:train_num+val_num], batch_size = batch_size, shuffle = False)
-test_loader = DataLoader(SIDER[-test_num:], batch_size = test_num, shuffle = False)
+train_loader = DataLoader(Sider[:train_num], batch_size = batch_size, shuffle = False)
+validate_loader = DataLoader(Sider[train_num:train_num+val_num], batch_size = batch_size, shuffle = False)
+test_loader = DataLoader(Sider[-test_num:], batch_size = test_num, shuffle = False)
+
+def perturb(x):
+	mean_x = torch.mean(x).cpu().detach().numpy()
+	return np.random.normal(loc=0.0, scale = noise_lvl*mean_x, size = x.shape)
+
 
 class AtomBondConv(MessagePassing):
 	def __init__(self, x_dim, edge_attr_dim):
@@ -82,11 +91,9 @@ class MyNet(torch.nn.Module):
 		return Sigmoid()(out)
 		
 
-
-
 #example
-#data_loader = DataLoader(SIDER[0:1], batch_size = 1, shuffle= False)
-#data = SIDER[12].to(device)
+#data_loader = DataLoader(Sider[0:1], batch_size = 1, shuffle= False)
+#data = Sider[12].to(device)
 #print(f"smi:{data.smiles}\n  edge_index:\n{data.edge_index}\n  edge_attr:\n{data.edge_attr} \ny:\n{data.y}\n  y.shape:{data.y.shape}")
 
 #out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
@@ -115,7 +122,7 @@ def BCELoss_no_NaN(out, target):
 	#print(f"target_no_NaN:{target_no_NaN}")
 	return torch.nn.BCELoss()(out, target_no_NaN)
 
-def train(data_loader, debug_mode, target_col):
+def train(data_loader, debug_mode, target_col, add_noise):
 	model.train()
 	for data in data_loader:
 		#print(f"smi:{data.smiles}")
@@ -132,8 +139,15 @@ def train(data_loader, debug_mode, target_col):
 		#print(f"out.shape:{out.shape},           y.shape{data.y[:, target_col].shape}")
 		#print(f"out:{out}\n y:\n{data.y[:,target_col]}")
 		loss = BCELoss_no_NaN(out, data.y[:,target_col])
-		#print(f"loss:{loss}")
-		loss.backward()
+		if(add_noise):
+			x_noise = torch.tensor(perturb(x)).to(device)
+			out_noise = model(x_noise.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
+			regularization = torch.nn.MSELoss()(out, out_noise.view(out.shape))
+			total_loss = loss+regularization
+		else:
+			total_loss = loss
+		#print(f"loss:{loss}, total_loss:{total_loss}")
+		total_loss.backward()
 		optimizer.step()
 		optimizer.zero_grad()
 		if(debug_mode):
@@ -211,12 +225,19 @@ col_result = []
 for col in target_col:
 	print(f"col:{col}")
 	test_sc = 0
-	for epoch in range(num_epoches):
+	add_noise = False
+	for epoch in tqdm(range(num_epoches)):
+		#print(f"epoch:{epoch}")
 		optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
-		train(train_loader, False, col)#epoch==(num_epoches-1))
+		if epoch > add_noise_train_perc * num_epoches:
+			add_noise = True
+		#print(f"add_noise:{add_noise}")
+		train(train_loader, False, col, add_noise)#epoch==(num_epoches-1))
 		#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
 		test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
 		#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
-		print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
+		#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
+		if((epoch==num_epoches -1)):
+			print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
 	col_result.append(col_result)
 print(col_result)

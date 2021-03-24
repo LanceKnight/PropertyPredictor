@@ -33,10 +33,10 @@ Tox21 = MoleculeNet(root = "../data/raw/Tox21", name = "Tox21")
 #print("============")
 #print(f"num of data:{len(Tox21)}")
 
-num_data = 1000#len(Tox21)
-train_num = int(num_data * 0.8)
+num_data = len(Tox21)
+train_num = 1000#int(num_data * 0.8)
 val_num = int(num_data * 0.0)
-test_num = num_data - train_num - val_num
+test_num = 200#num_data - train_num - val_num
 print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
 train_loader = DataLoader(Tox21[:train_num], batch_size = batch_size, shuffle = False)

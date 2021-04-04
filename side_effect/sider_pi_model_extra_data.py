@@ -26,8 +26,8 @@ batch_size = 64
 hidden_activation = Softmax()#Tanh()
 conv_depth = 5
 dropout_rate = 0.2
-ini_scaled_unsupervised_weight = 100
-rampup_length = 50
+ini_scaled_unsupervised_weight = 1000
+rampup_length = 0
 target_col = [x for x in range(0,6)]
 
 print(f"target_col:{target_col}")
@@ -42,7 +42,7 @@ val_num = int(num_data * 0.0)
 test_num = num_data - ori_train_num - val_num
 #print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
-num_extra_data = 8000
+num_extra_data = 0
 train_dataset = SIDER[:ori_train_num] + SIDER[1427:(1427+num_extra_data)]
 test_dataset = SIDER[1427-test_num:1427]
 
@@ -58,16 +58,16 @@ test_loader = DataLoader(test_dataset, batch_size = test_num, shuffle = False)
 #print(f"train_num = {len(train_dataset)}, val_num = {len(validate_loader)}, test_num = {len(test_dataset)}")
 
 print(f"train_num = {len(train_dataset)}, test_num = {len(test_dataset)}")
-
+print(f"w:{ini_scaled_unsupervised_weight}")
 class AtomBondConv(MessagePassing):
 	def __init__(self, x_dim, edge_attr_dim):
 		super(AtomBondConv, self).__init__(aggr = 'add')
 		self.W_in = Linear(x_dim + edge_attr_dim, x_dim)
-
+		self.dropout = torch.nn.Dropout(dropout_rate)
 	def forward(self, x, edge_index, edge_attr, smiles, batch):		
 		edge_index, _ = add_self_loops(edge_index, num_nodes = x.size(0))
 		x = self.propagate(edge_index, x = x, edge_attr = edge_attr)
-		x = self.W_in(x)
+		x = self.dropout(self.W_in(x))
 		return x
 
 	def message(self, x, x_j, edge_attr):
@@ -96,7 +96,7 @@ class MyNet(torch.nn.Module):
 			x = self.atom_bond_conv(x, edge_index, edge_attr, smiles, batch)
 
 		overall_molecule_fp	= torch.stack(molecule_fp_lst, dim=0).sum(dim=0)	
-		hidden = self.lin1(overall_molecule_fp)
+		hidden = self.dropout(self.lin1(overall_molecule_fp))
 		out = self.dropout(self.lin2(hidden))
 		return Sigmoid()(out)
 		
@@ -141,11 +141,13 @@ def train(data_loader, debug_mode, target_col, unsupervised_weight):
 		out = out.view(len(data.y[:,target_col]))
 
 		out2 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
-		out2 = out.view(len(data.y[:,target_col]))
+		out2 = out2.view(len(data.y[:,target_col]))
 		#print(f"out.shape:{out.shape},           y.shape{data.y[:, target_col].shape}")
 		#print(f"out:{out}\n y:\n{data.y[:,target_col]}")
 		loss = BCELoss_no_NaN(out, data.y[:,target_col])
 		unsupervised_loss = torch.nn.MSELoss()(out, out2)
+		#print(f"out:\n{out}, out2:\n{out2} ")
+		#print(f"u_loss:{unsupervised_loss}")
 		total_loss = loss + unsupervised_weight * unsupervised_loss
 		#print(f"loss:{loss}")
 		total_loss.backward()

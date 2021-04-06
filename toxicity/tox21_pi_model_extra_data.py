@@ -27,8 +27,8 @@ hidden_activation = Softmax()#Tanh()
 conv_depth = 5
 dropout_rate = 0.2
 ini_scaled_unsupervised_weight = 100
-rampup_length = 30
-target_col = [x for x in range(6,12)]
+rampup_length = 0#30
+target_col = [x for x in range(0,12)]
 
 print(f"target_col:{target_col}")
 Tox21 = MoleculeNet(root = "../data/raw/Tox21", name = "Tox21")
@@ -142,11 +142,12 @@ def train(data_loader, debug_mode, target_col, unsupervised_weight):
 		out = out.view(len(data.y[:,target_col]))
 
 		out2 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
-		out2 = out.view(len(data.y[:,target_col]))
+		out2 = out2.view(len(data.y[:,target_col]))
 		#print(f"out.shape:{out.shape},           y.shape{data.y[:, target_col].shape}")
 		#print(f"out:{out}\n y:\n{data.y[:,target_col]}")
 		loss = BCELoss_no_NaN(out, data.y[:,target_col])
 		unsupervised_loss = torch.nn.MSELoss()(out, out2)
+		print(f"s_loss:{unsupervised_loss}")
 		total_loss = loss + unsupervised_weight * unsupervised_loss
 		#print(f"loss:{loss}")
 		total_loss.backward()

@@ -1,0 +1,5 @@
+2021-04-15 20:53:31.088054
+target_col:[0] use_ssl:True
+
+
+col:0, extra_unlabeled:0, w:100  val_sc:0.4973             test AUC: 0.5640

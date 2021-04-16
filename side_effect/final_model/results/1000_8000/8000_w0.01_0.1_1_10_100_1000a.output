@@ -1,0 +1,45 @@
+2021-04-14 14:01:09.551591
+target_col:[0, 1, 2, 3, 4, 5]
+
+
+col:0, extra_unlabeled:8000, w:0.01  val_sc:0.5878             test AUC: 0.7239
+col:1, extra_unlabeled:8000, w:0.01  val_sc:0.7689             test AUC: 0.7225
+col:2, extra_unlabeled:8000, w:0.01  val_sc:0.0223             test AUC: 0.0343
+col:3, extra_unlabeled:8000, w:0.01  val_sc:0.7276             test AUC: 0.6227
+col:4, extra_unlabeled:8000, w:0.01  val_sc:0.8737             test AUC: 0.8210
+col:5, extra_unlabeled:8000, w:0.01  val_sc:0.7722             test AUC: 0.7804
+
+
+col:0, extra_unlabeled:8000, w:0.1  val_sc:0.5889             test AUC: 0.7498
+col:1, extra_unlabeled:8000, w:0.1  val_sc:0.7865             test AUC: 0.7009
+col:2, extra_unlabeled:8000, w:0.1  val_sc:0.0228             test AUC: 0.0334
+col:3, extra_unlabeled:8000, w:0.1  val_sc:0.7152             test AUC: 0.6218
+col:4, extra_unlabeled:8000, w:0.1  val_sc:0.8770             test AUC: 0.8415
+col:5, extra_unlabeled:8000, w:0.1  val_sc:0.7370             test AUC: 0.7592
+
+
+col:0, extra_unlabeled:8000, w:1  val_sc:0.6243             test AUC: 0.7141
+col:1, extra_unlabeled:8000, w:1  val_sc:0.7595             test AUC: 0.7492
+col:2, extra_unlabeled:8000, w:1  val_sc:0.0212             test AUC: 0.0336
+col:3, extra_unlabeled:8000, w:1  val_sc:0.7028             test AUC: 0.6284
+col:4, extra_unlabeled:8000, w:1  val_sc:0.8836             test AUC: 0.8373
+col:5, extra_unlabeled:8000, w:1  val_sc:0.7667             test AUC: 0.7649
+
+
+col:0, extra_unlabeled:8000, w:10  val_sc:0.5808             test AUC: 0.7314
+col:1, extra_unlabeled:8000, w:10  val_sc:0.7775             test AUC: 0.7116
+col:2, extra_unlabeled:8000, w:10  val_sc:0.0148             test AUC: 0.0824
+col:3, extra_unlabeled:8000, w:10  val_sc:0.6810             test AUC: 0.6149
+col:4, extra_unlabeled:8000, w:10  val_sc:0.8861             test AUC: 0.8331
+col:5, extra_unlabeled:8000, w:10  val_sc:0.7722             test AUC: 0.7440
+
+
+col:0, extra_unlabeled:8000, w:100  val_sc:0.5993             test AUC: 0.7323
+col:1, extra_unlabeled:8000, w:100  val_sc:0.7852             test AUC: 0.7387
+col:2, extra_unlabeled:8000, w:100  val_sc:0.0122             test AUC: 0.0317
+col:3, extra_unlabeled:8000, w:100  val_sc:0.6391             test AUC: 0.5910
+col:4, extra_unlabeled:8000, w:100  val_sc:0.8830             test AUC: 0.8444
+col:5, extra_unlabeled:8000, w:100  val_sc:0.7483             test AUC: 0.7683
+
+
+col:0, extra_unlabeled:8000, w:1000  val_sc:0.5830             test AUC: 0.7288

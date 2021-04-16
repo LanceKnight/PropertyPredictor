@@ -1,0 +1,47 @@
+2021-04-13 17:51:43.306679
+target_col:[0, 1, 2, 3, 4, 5]
+
+
+col:3, extra_unlabeled:0, w:0.01  val_sc:0.6428, test AUC: 0.5928
+col:4, extra_unlabeled:0, w:0.01  val_sc:0.8852, test AUC: 0.8501
+col:5, extra_unlabeled:0, w:0.01  val_sc:0.6921, test AUC: 0.8084
+
+
+col:0, extra_unlabeled:0, w:0.1  val_sc:0.5198, test AUC: 0.6677
+col:1, extra_unlabeled:0, w:0.1  val_sc:0.7463, test AUC: 0.7439
+col:2, extra_unlabeled:0, w:0.1  val_sc:0.0178, test AUC: nan
+col:3, extra_unlabeled:0, w:0.1  val_sc:0.6327, test AUC: 0.5929
+col:4, extra_unlabeled:0, w:0.1  val_sc:0.8750, test AUC: 0.8386
+col:5, extra_unlabeled:0, w:0.1  val_sc:0.6852, test AUC: 0.7909
+
+
+col:0, extra_unlabeled:0, w:1  val_sc:0.5180, test AUC: 0.6681
+col:1, extra_unlabeled:0, w:1  val_sc:0.7640, test AUC: 0.7356
+col:2, extra_unlabeled:0, w:1  val_sc:0.0191, test AUC: nan
+col:3, extra_unlabeled:0, w:1  val_sc:0.6412, test AUC: 0.6108
+col:4, extra_unlabeled:0, w:1  val_sc:0.8724, test AUC: 0.8545
+col:5, extra_unlabeled:0, w:1  val_sc:0.6750, test AUC: 0.8160
+
+
+col:0, extra_unlabeled:0, w:10  val_sc:0.5215, test AUC: 0.6780
+col:1, extra_unlabeled:0, w:10  val_sc:0.7675, test AUC: 0.7325
+col:2, extra_unlabeled:0, w:10  val_sc:0.0099, test AUC: nan
+col:3, extra_unlabeled:0, w:10  val_sc:0.6384, test AUC: 0.5890
+col:4, extra_unlabeled:0, w:10  val_sc:0.8716, test AUC: 0.8600
+col:5, extra_unlabeled:0, w:10  val_sc:0.7324, test AUC: 0.8021
+
+
+col:0, extra_unlabeled:0, w:100  val_sc:0.5239, test AUC: 0.6933
+col:1, extra_unlabeled:0, w:100  val_sc:0.7377, test AUC: 0.7365
+col:2, extra_unlabeled:0, w:100  val_sc:0.0152, test AUC: nan
+col:3, extra_unlabeled:0, w:100  val_sc:0.6459, test AUC: 0.6033
+col:4, extra_unlabeled:0, w:100  val_sc:0.8538, test AUC: 0.8616
+col:5, extra_unlabeled:0, w:100  val_sc:0.7265, test AUC: 0.8181
+
+
+col:0, extra_unlabeled:0, w:1000  val_sc:0.5475, test AUC: 0.6271
+col:1, extra_unlabeled:0, w:1000  val_sc:0.7811, test AUC: 0.7371
+col:2, extra_unlabeled:0, w:1000  val_sc:0.0093, test AUC: nan
+col:3, extra_unlabeled:0, w:1000  val_sc:0.6224, test AUC: 0.6112
+col:4, extra_unlabeled:0, w:1000  val_sc:0.8263, test AUC: 0.7816
+col:5, extra_unlabeled:0, w:1000  val_sc:0.7114, test AUC: 0.7937

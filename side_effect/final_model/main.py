@@ -135,9 +135,10 @@ def get_num_samples(data_loader):
 	#print(f"len(data_loader):{len(data_loader)}, last batch:{num_graph_in_last_batch},  total:{total}")
 	return total 
 
-
+train_auc = ['train']
 val_auc = ['val']
 test_auc = ['test']
+train_auc_per_epoch = ['train']
 val_auc_per_epoch = ['val']
 test_auc_per_epoch = ['test']
 lrs = []
@@ -146,9 +147,11 @@ for lr_init in lr_init_lst:
 		for lr_exp_multiplier in lr_exp_multiplier_lst:
 			for ini_scaled_unsupervised_weight in w:
 				tee_print("\n")		
+				train_auc.append(ini_scaled_unsupervised_weight)
 				val_auc.append(ini_scaled_unsupervised_weight)
 				test_auc.append(ini_scaled_unsupervised_weight)
 
+				train_auc_per_epoch.append(ini_scaled_unsupervised_weight)
 				val_auc_per_epoch.append(ini_scaled_unsupervised_weight)
 				test_auc_per_epoch.append(ini_scaled_unsupervised_weight)
 				for col in target_col:
@@ -162,6 +165,7 @@ for lr_init in lr_init_lst:
 					scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
 					previous_val_sc = 999
 					patience_count = 0
+					train_auc_per_epoch.append(col)
 					val_auc_per_epoch.append(col)
 					test_auc_per_epoch.append(col)
 					for epoch in tqdm(range(num_epochs)):
@@ -174,8 +178,10 @@ for lr_init in lr_init_lst:
 						#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
 						#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
 						#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
+						train_sc = test(model, train_loader, False, col, device)
 						val_sc = test(model, val_loader, False, col, device)
 						test_sc = test(model, test_loader, False, col, device)# epoch==(num_epoches-1))
+						train_auc_per_epoch.append(train_sc)
 						val_auc_per_epoch.append(val_sc)
 						test_auc_per_epoch.append(test_sc)
 						if val_sc > previous_val_sc:
@@ -187,15 +193,16 @@ for lr_init in lr_init_lst:
 							patience_count = 0			
 
 						if((epoch%1 == 0)):
-							print(f"Epoch:{epoch:03d}, val AUC: {val_sc: .4f}  test_AUC:{test_sc:.4f}")
+							print(f"Epoch:{epoch:03d}, train AUC: {train_sc: .4f}   val AUC: {val_sc: .4f}  test_AUC:{test_sc:.4f}")
 						previous_val_sc = val_sc
 					print(f"lrs:{lrs}")
 					tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{ini_scaled_unsupervised_weight}  val_sc:{val_sc:.4f}             test AUC: {test_sc:.4f}")
+					train_auc.append(train_sc)
 					val_auc.append(val_sc)
 					test_auc.append(test_sc)
 				
 				
 	
-print_val_test_auc(val_auc, test_auc,  final_auc_file)
-print_val_test_auc(val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)
+print_val_test_auc(train_auc, val_auc, test_auc,  final_auc_file)
+print_val_test_auc(train_auc, val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)
 

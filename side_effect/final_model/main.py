@@ -2,7 +2,6 @@
 import torch
 import torch.nn.functional as F
 from torch.nn import Linear, Tanh, Softmax, Sigmoid, Dropout
-#from torch_geometric.datasets import MoleculeNet
 from torch_geometric.nn import MessagePassing, global_add_pool
 from torch_geometric.utils import add_self_loops
 
@@ -20,33 +19,38 @@ import pandas as pd
 
 from molecule_processing import batch2attributes, num_node_features, num_edge_features
 from dataset import Get_Loaders, Get_Stats
-#from network import Get_Net
 from printing import tee_print, set_output_file, print_val_test_auc
-from config_parser import Get_Config, Set_Config_File
-#import dataset
-#import printing
+from config_parser import get_config, set_config_file
 
 
 config_file = sys.argv[1]
-Set_Config_File(config_file)
+set_config_file(config_file)
 
-num_epochs = int(Get_Config('cfg','num_epochs'))
-p = int(Get_Config('cfg','p'))
-inner_atom_dim = int(Get_Config('cfg','inner_atom_dim'))
-batch_size = int(Get_Config('cfg','batch_size'))
-hidden_activation = Get_Config('cfg','hidden_activation')
-conv_depth = int(Get_Config('cfg','conv_depth'))
-unsup_dropout_rate = float(Get_Config('cfg','unsup_dropout_rate'))
-sup_dropout_rate = float(Get_Config('cfg','sup_dropout_rate'))
-w = Get_Config('cfg','w')
-rampup_length = int(Get_Config('cfg','rampup_length'))
-target_col = Get_Config('cfg','target_col')
-num_extra_data = int(Get_Config('cfg','num_extra_data'))
-output_file = Get_Config('cfg','output_file')
-#headers = Get_Config('cfg', 'headers')
-final_auc_file = Get_Config('cfg','auc_file')
-auc_file_per_epoch = Get_Config('cfg', 'auc_file_per_epoch')
-use_SSL = bool(int(Get_Config('cfg', 'use_ssl')))
+p = int(get_config('cfg','p'))
+rampup_length = int(get_config('cfg','rampup_length'))
+target_col = get_config('cfg','target_col')
+num_extra_data = int(get_config('cfg','num_extra_data'))
+
+inner_atom_dim = int(get_config('architecture','inner_atom_dim'))
+#hidden_activation = get_config('architecture','hidden_activation')
+conv_depth = int(get_config('architecture','conv_depth'))
+sup_dropout_rate = float(get_config('architecture','sup_dropout_rate'))
+
+batch_size = int(get_config('training','batch_size'))
+num_epochs = int(get_config('training','num_epochs'))
+
+unsup_dropout_rate = float(get_config('unsupervised','unsup_dropout_rate'))
+w = get_config('unsupervised','w')
+use_SSL = bool(int(get_config('unsupervised', 'use_ssl')))
+
+lr_ini = get_config('lr','lr_init')
+lr_base = get_config('lr', 'lr_base')
+lr_exp_multiplier = get_config('lr', 'lr_exp_multiplier')
+
+output_file = get_config('file','output_file')
+final_auc_file = get_config('file','auc_file')
+auc_file_per_epoch = get_config('file', 'auc_file_per_epoch')
+
 
 set_output_file(output_file)
 
@@ -219,8 +223,8 @@ def test(data_loader, debug_mode, target_col):
 		y = y[~np.isnan(y)]
 
 		#print(f"data.y.shape:{y}   out.shape:{out})")
-		#sc = roc_auc_score(y, out)
-		sc = pr_auc(y, out)
+		sc = roc_auc_score_one_class_compatible(y, out)
+		#sc = pr_auc(y, out)
 		auc_lst.append(sc)
 		if(debug_mode):
 			#p = pred.cpu().detach().numpy()
@@ -320,17 +324,4 @@ for ini_scaled_unsupervised_weight in w:
 	
 print_val_test_auc(val_auc, test_auc,  final_auc_file)
 print_val_test_auc(val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)
-#print_val_test_auc_per_epoch(val_auc_per_epoch, test_auc_per_epoch, target_col,w, num_epochs, auc_file_per_epoch)
-
-#df = pd.DataFrame()
-#for i in range(len(w)):
-#	val_auc.insert(i*(len(target_col)+1)+1, w[i])
-#for i in range(len(w)):
-#	test_auc.insert(i*(len(target_col)+1)+1, w[i])
-##print(f"headers:{headers}, len:{len(headers)}")
-#print(f"val_auc:{val_auc}, len:{len(val_auc)}")
-#print(f"test_auc:{test_auc}, len:{len(test_auc)}")
-#df = df.append(val_auc)
-#df = df.append(test_auc)
-#df.to_csv(final_auc_file)	
 

@@ -4,11 +4,11 @@ import configparser
 config = configparser.SafeConfigParser()
 config_file = []
 
-def Set_Config_File(file_name):
+def set_config_file(file_name):
 	global config_file 
 	config_file= file_name
 
-def Get_Config(section, option):
+def get_config(section, option):
 	with open(config_file, 'r') as f:
 		config.readfp(f)
 	value = config._sections[section][option]

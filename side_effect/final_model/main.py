@@ -204,5 +204,5 @@ for lr_init in lr_init_lst:
 				
 	
 print_val_test_auc(train_auc, val_auc, test_auc,  final_auc_file)
-print_val_test_auc(train_auc, val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)
+print_val_test_auc(train_auc_per_epoch, val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)
 

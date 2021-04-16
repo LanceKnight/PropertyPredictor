@@ -21,7 +21,7 @@ import pandas as pd
 from molecule_processing import batch2attributes, num_node_features, num_edge_features
 from dataset import Get_Loaders, Get_Stats
 #from network import Get_Net
-from printing import tee_print, set_output_file
+from printing import tee_print, set_output_file, print_val_test_auc
 from config_parser import Get_Config, Set_Config_File
 #import dataset
 #import printing
@@ -44,7 +44,8 @@ target_col = Get_Config('cfg','target_col')
 num_extra_data = int(Get_Config('cfg','num_extra_data'))
 output_file = Get_Config('cfg','output_file')
 #headers = Get_Config('cfg', 'headers')
-csv_file = Get_Config('cfg','csv_file')
+final_auc_file = Get_Config('cfg','auc_file')
+auc_file_per_epoch = Get_Config('cfg', 'auc_file_per_epoch')
 use_SSL = bool(int(Get_Config('cfg', 'use_ssl')))
 
 set_output_file(output_file)
@@ -262,48 +263,74 @@ def get_num_samples(data_loader):
 
 val_auc = ['val']
 test_auc = ['test']
+val_auc_per_epoch = ['val']
+test_auc_per_epoch = ['test']
+lrs = []
 for ini_scaled_unsupervised_weight in w:
 	tee_print("\n")		
+	val_auc.append(ini_scaled_unsupervised_weight)
+	test_auc.append(ini_scaled_unsupervised_weight)
+
+	val_auc_per_epoch.append(ini_scaled_unsupervised_weight)
+	test_auc_per_epoch.append(ini_scaled_unsupervised_weight)
 	for col in target_col:
 		num_train, num_labels, num_unlabeled = Get_Stats(col)
 		scaled_unsupervised_weight = ini_scaled_unsupervised_weight * float(num_labels) / float(num_train)
 		test_sc = 0
 		model = MyNet(num_node_features, num_edge_features, conv_depth).to(device)#Get_Net(num_node_features, num_edge_features, conv_depth, inner_atom_dim, dropout_rate).to(device)
+
+		optimizer = torch.optim.Adam(model.parameters(), lr = 0.007)#, weight_decay = 5e-4)
+		lambda1 = lambda epoch:math.exp(-epoch/30)
+		scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
 		previous_val_sc = 999
 		patience_count = 0
+		val_auc_per_epoch.append(col)
+		test_auc_per_epoch.append(col)
 		for epoch in tqdm(range(num_epochs)):
-			optimizer = torch.optim.Adam(model.parameters(), lr = 0.00007* math.exp(-epoch/30 ))#, weight_decay = 5e-4)
+			
+			lrs.append(optimizer.param_groups[0]["lr"])
 			rampup_val = rampup(epoch)
 			unsupervised_weight = rampup_val * scaled_unsupervised_weight
 			train(train_loader, False, col, unsupervised_weight)#epoch==(num_epoches-1))
+			scheduler.step()
 			#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
 			#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
 			#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
 			val_sc = test(val_loader, False, col)
 			test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
+			val_auc_per_epoch.append(val_sc)
+			test_auc_per_epoch.append(test_sc)
 			if val_sc > previous_val_sc:
 				patience_count +=1
 				if(patience_count == p):
 					print(f"consecutive {p} epochs without validation set improvement. Break early at epoch {epoch}")
 					break
+			else:
+				patience_count = 0			
 
 			if((epoch%1 == 0)):
 				print(f"Epoch:{epoch:03d}, val AUC: {val_sc: .4f}  test_AUC:{test_sc:.4f}")
 			previous_val_sc = val_sc
+		print(f"lrs:{lrs}")
 		tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{ini_scaled_unsupervised_weight}  val_sc:{val_sc:.4f}             test AUC: {test_sc:.4f}")
 		val_auc.append(val_sc)
 		test_auc.append(test_sc)
 	
+	
+	
+print_val_test_auc(val_auc, test_auc,  final_auc_file)
+print_val_test_auc(val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)
+#print_val_test_auc_per_epoch(val_auc_per_epoch, test_auc_per_epoch, target_col,w, num_epochs, auc_file_per_epoch)
 
-df = pd.DataFrame()
-for i in range(len(w)):
-	val_auc.insert(i*(len(target_col)+1)+1, w[i])
-for i in range(len(w)):
-	test_auc.insert(i*(len(target_col)+1)+1, w[i])
-#print(f"headers:{headers}, len:{len(headers)}")
-print(f"val_auc:{val_auc}, len:{len(val_auc)}")
-print(f"test_auc:{test_auc}, len:{len(test_auc)}")
-df = df.append(val_auc)
-df = df.append(test_auc)
-df.to_csv(csv_file)	
+#df = pd.DataFrame()
+#for i in range(len(w)):
+#	val_auc.insert(i*(len(target_col)+1)+1, w[i])
+#for i in range(len(w)):
+#	test_auc.insert(i*(len(target_col)+1)+1, w[i])
+##print(f"headers:{headers}, len:{len(headers)}")
+#print(f"val_auc:{val_auc}, len:{len(val_auc)}")
+#print(f"test_auc:{test_auc}, len:{len(test_auc)}")
+#df = df.append(val_auc)
+#df = df.append(test_auc)
+#df.to_csv(final_auc_file)	
 

@@ -45,9 +45,9 @@ unsup_dropout_rate = float(get_config('unsupervised','unsup_dropout_rate'))
 w = get_config('unsupervised','w')
 use_SSL = bool(int(get_config('unsupervised', 'use_ssl')))
 
-lr_ini = get_config('lr','lr_init')
-lr_base = get_config('lr', 'lr_base')
-lr_exp_multiplier = get_config('lr', 'lr_exp_multiplier')
+lr_init_lst = get_config('lr','lr_init')
+lr_base_lst = get_config('lr', 'lr_base')
+lr_exp_multiplier_lst = get_config('lr', 'lr_exp_multiplier')
 
 output_file = get_config('file','output_file')
 final_auc_file = get_config('file','auc_file')
@@ -141,57 +141,60 @@ test_auc = ['test']
 val_auc_per_epoch = ['val']
 test_auc_per_epoch = ['test']
 lrs = []
-for ini_scaled_unsupervised_weight in w:
-	tee_print("\n")		
-	val_auc.append(ini_scaled_unsupervised_weight)
-	test_auc.append(ini_scaled_unsupervised_weight)
+for lr_init in lr_init_lst:
+	for lr_base in lr_base_lst:
+		for lr_exp_multiplier in lr_exp_multiplier_lst:
+			for ini_scaled_unsupervised_weight in w:
+				tee_print("\n")		
+				val_auc.append(ini_scaled_unsupervised_weight)
+				test_auc.append(ini_scaled_unsupervised_weight)
 
-	val_auc_per_epoch.append(ini_scaled_unsupervised_weight)
-	test_auc_per_epoch.append(ini_scaled_unsupervised_weight)
-	for col in target_col:
-		num_train, num_labels, num_unlabeled = get_stats(col)
-		scaled_unsupervised_weight = ini_scaled_unsupervised_weight * float(num_labels) / float(num_train)
-		test_sc = 0
-		model = MyNet(num_node_features, num_edge_features, conv_depth).to(device)#Get_Net(num_node_features, num_edge_features, conv_depth, inner_atom_dim, dropout_rate).to(device)
+				val_auc_per_epoch.append(ini_scaled_unsupervised_weight)
+				test_auc_per_epoch.append(ini_scaled_unsupervised_weight)
+				for col in target_col:
+					num_train, num_labels, num_unlabeled = get_stats(col)
+					scaled_unsupervised_weight = ini_scaled_unsupervised_weight * float(num_labels) / float(num_train)
+					test_sc = 0
+					model = MyNet(num_node_features, num_edge_features, conv_depth).to(device)#Get_Net(num_node_features, num_edge_features, conv_depth, inner_atom_dim, dropout_rate).to(device)
 
-		optimizer = torch.optim.Adam(model.parameters(), lr = 0.007)#, weight_decay = 5e-4)
-		lambda1 = lambda epoch:math.exp(-epoch/30)
-		scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
-		previous_val_sc = 999
-		patience_count = 0
-		val_auc_per_epoch.append(col)
-		test_auc_per_epoch.append(col)
-		for epoch in tqdm(range(num_epochs)):
-			
-			lrs.append(optimizer.param_groups[0]["lr"])
-			rampup_val = rampup(epoch)
-			unsupervised_weight = rampup_val * scaled_unsupervised_weight
-			train(model, train_loader,  col, unsupervised_weight, device, optimizer, use_SSL = use_SSL, debug_mode = False)#epoch==(num_epoches-1))
-			scheduler.step()
-			#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
-			#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
-			#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-			val_sc = test(model, val_loader, False, col, device)
-			test_sc = test(model, test_loader, False, col, device)# epoch==(num_epoches-1))
-			val_auc_per_epoch.append(val_sc)
-			test_auc_per_epoch.append(test_sc)
-			if val_sc > previous_val_sc:
-				patience_count +=1
-				if(patience_count == p):
-					print(f"consecutive {p} epochs without validation set improvement. Break early at epoch {epoch}")
-					break
-			else:
-				patience_count = 0			
+					optimizer = torch.optim.Adam(model.parameters(), lr = lr_init)#, weight_decay = 5e-4)
+					lambda1 = lambda epoch: lr_base ** (lr_exp_multiplier*epoch)
+					scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
+					previous_val_sc = 999
+					patience_count = 0
+					val_auc_per_epoch.append(col)
+					test_auc_per_epoch.append(col)
+					for epoch in tqdm(range(num_epochs)):
+						
+						lrs.append(optimizer.param_groups[0]["lr"])
+						rampup_val = rampup(epoch)
+						unsupervised_weight = rampup_val * scaled_unsupervised_weight
+						train(model, train_loader,  col, unsupervised_weight, device, optimizer, use_SSL = use_SSL, debug_mode = False)#epoch==(num_epoches-1))
+						scheduler.step()
+						#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
+						#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
+						#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
+						val_sc = test(model, val_loader, False, col, device)
+						test_sc = test(model, test_loader, False, col, device)# epoch==(num_epoches-1))
+						val_auc_per_epoch.append(val_sc)
+						test_auc_per_epoch.append(test_sc)
+						if val_sc > previous_val_sc:
+							patience_count +=1
+							if(patience_count == p):
+								print(f"consecutive {p} epochs without validation set improvement. Break early at epoch {epoch}")
+								break
+						else:
+							patience_count = 0			
 
-			if((epoch%1 == 0)):
-				print(f"Epoch:{epoch:03d}, val AUC: {val_sc: .4f}  test_AUC:{test_sc:.4f}")
-			previous_val_sc = val_sc
-		print(f"lrs:{lrs}")
-		tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{ini_scaled_unsupervised_weight}  val_sc:{val_sc:.4f}             test AUC: {test_sc:.4f}")
-		val_auc.append(val_sc)
-		test_auc.append(test_sc)
-	
-	
+						if((epoch%1 == 0)):
+							print(f"Epoch:{epoch:03d}, val AUC: {val_sc: .4f}  test_AUC:{test_sc:.4f}")
+						previous_val_sc = val_sc
+					print(f"lrs:{lrs}")
+					tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{ini_scaled_unsupervised_weight}  val_sc:{val_sc:.4f}             test AUC: {test_sc:.4f}")
+					val_auc.append(val_sc)
+					test_auc.append(test_sc)
+				
+				
 	
 print_val_test_auc(val_auc, test_auc,  final_auc_file)
 print_val_test_auc(val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)

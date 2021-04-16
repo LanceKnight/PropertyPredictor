@@ -1,0 +1,28 @@
+target_col:[0, 1, 2, 3, 4, 5]
+train_num = 9141, test_num = 286
+w:40
+col:0   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.6677
+col:1   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.6222
+col:2   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.3239
+col:3   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.5227
+col:4   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.6726
+col:5   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.5877
+w:70
+col:0   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.6459
+col:1   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.6090
+col:2   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.4735
+col:3   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.5495
+col:4   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.6941
+col:5   num_labelled:1141   num_unlabelled:8000
+test AUC: 0.6251

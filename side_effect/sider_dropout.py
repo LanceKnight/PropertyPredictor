@@ -1,4 +1,3 @@
-# pi model with more unlabeled data
 import torch
 import torch.nn.functional as F
 from torch.nn import Linear, Tanh, Softmax, Sigmoid
@@ -25,9 +24,7 @@ inner_atom_dim = 512
 batch_size = 64
 hidden_activation = Softmax()#Tanh()
 conv_depth = 5
-dropout_rate = 0.2
-ini_scaled_unsupervised_weight = 0.01
-rampup_length = 0
+dropout_rate=0.2
 target_col = [x for x in range(0,6)]
 
 print(f"target_col:{target_col}")
@@ -37,28 +34,17 @@ SIDER = MoleculeNet(root = "../data/raw/SIDER", name = "SIDER")
 #print(f"num of data:{len(SIDER)}")
 
 num_data = 1427#len(SIDER)
-ori_train_num = int(num_data * 0.8)
+train_num = int(num_data * 0.8)
 val_num = int(num_data * 0.0)
-test_num = num_data - ori_train_num - val_num
-#print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
+test_num = num_data - train_num - val_num
+print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
-num_extra_data = 8000
-train_dataset = SIDER[:ori_train_num] + SIDER[1427:(1427+num_extra_data)]
-test_dataset = SIDER[1427-test_num:1427]
 
-train_num = len(train_dataset)
-#print(f"e.g.{SIDER[1427]}")
-#sample_index =999
-#print(f"sample: {train_dataset[sample_index].smiles}  y:{train_dataset[sample_index].y}")
 
-train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-#validate_loader = DataLoader(SIDER[train_num:train_num+val_num], batch_size = batch_size, shuffle = False)
-test_loader = DataLoader(test_dataset, batch_size = test_num, shuffle = False)
+train_loader = DataLoader(SIDER[:train_num], batch_size = batch_size, shuffle = False)
+validate_loader = DataLoader(SIDER[train_num:train_num+val_num], batch_size = batch_size, shuffle = False)
+test_loader = DataLoader(SIDER[1427-test_num:1427], batch_size = test_num, shuffle = False)
 
-#print(f"train_num = {len(train_dataset)}, val_num = {len(validate_loader)}, test_num = {len(test_dataset)}")
-
-print(f"train_num = {len(train_dataset)}, test_num = {len(test_dataset)}")
-print(f"w:{ini_scaled_unsupervised_weight}")
 class AtomBondConv(MessagePassing):
 	def __init__(self, x_dim, edge_attr_dim):
 		super(AtomBondConv, self).__init__(aggr = 'add')
@@ -101,20 +87,29 @@ class MyNet(torch.nn.Module):
 		return Sigmoid()(out)
 		
 
+#example
+#data_loader = DataLoader(SIDER[0:1], batch_size = 1, shuffle= False)
+#data = SIDER[12].to(device)
+#print(f"smi:{data.smiles}\n  edge_index:\n{data.edge_index}\n  edge_attr:\n{data.edge_attr} \ny:\n{data.y}\n  y.shape:{data.y.shape}")
+
+#out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
+#print(f"out:{out}")
+#for data in data_loader:
+#	x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
+#	#print(f"before- data.x:{data.x.shape}, edge_attr:{data.edge_attr.shape}")
+#	data.x = x
+#	data.edge_attr = edge_attr
+#	data.to(device)
+#	out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
+#	print(f"out:{out}")
+#
+
 is_cuda = torch.cuda.is_available()
 #print(f"is_cuda:{is_cuda}")
 
 device = torch.device('cuda' if is_cuda else 'cpu')
 model = MyNet(num_node_features, num_edge_features, conv_depth).to(device)
 #criterion = torch.nn.BCELoss()
-
-def rampup(epoch):
-    if epoch < rampup_length:
-        p = max(0.0, float(epoch)) / float(rampup_length)
-        p = 1.0 - p
-        return math.exp(-p*p*5.0)
-    else:
-        return 1.0
 
 def BCELoss_no_NaN(out, target):
 	#print(f"out.shape:{out.shape}             target.shape:{target.shape}")
@@ -123,34 +118,25 @@ def BCELoss_no_NaN(out, target):
 	#print(f"target_no_NaN:{target_no_NaN}")
 	return torch.nn.BCELoss()(out, target_no_NaN)
 
-
-def train(data_loader, debug_mode, target_col, unsupervised_weight):
+def train(data_loader, debug_mode, target_col):
 	model.train()
-	for i,  data in enumerate(data_loader):
-		#print(f"i:{i}, smi:{data.smiles}")
+	for data in data_loader:
+		#print(f"smi:{data.smiles}")
 		x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
 		#print(f"before- data.x:{data.x.shape}, edge_attr:{data.edge_attr.shape}")
 		data.x = x
 		data.edge_attr = edge_attr
 		data.to(device)
 	
-
 		#print(f"data.x:{data.x.shape}")
 		#print(f"data.edge_attr:{data.edge_attr.shape}")
 		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
 		out = out.view(len(data.y[:,target_col]))
-
-		out2 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
-		out2 = out2.view(len(data.y[:,target_col]))
 		#print(f"out.shape:{out.shape},           y.shape{data.y[:, target_col].shape}")
 		#print(f"out:{out}\n y:\n{data.y[:,target_col]}")
 		loss = BCELoss_no_NaN(out, data.y[:,target_col])
-		unsupervised_loss = torch.nn.MSELoss()(out, out2)
-		#print(f"out:\n{out}, out2:\n{out2} ")
-		#print(f"u_loss:{unsupervised_loss}")
-		total_loss = loss + unsupervised_weight * unsupervised_loss
 		#print(f"loss:{loss}")
-		total_loss.backward()
+		loss.backward()
 		optimizer.step()
 		optimizer.zero_grad()
 		if(debug_mode):
@@ -159,7 +145,7 @@ def train(data_loader, debug_mode, target_col, unsupervised_weight):
 			#print(f"{len(out_list)}, {len(y_list)}")
 			for i in range(len(out_list)): 
 				print(f"{out_list[i][0]}, {y_list[i][0]}") # for making correlation plot
-	
+
 def test(data_loader, debug_mode, target_col):
 	model.eval()
 
@@ -226,20 +212,15 @@ def get_num_samples(data_loader):
 
 col_result = []
 for col in target_col:
-	num_labels = sum([~torch.isnan(x.y[:,col]) for x in train_dataset]).item()
-	scaled_unsupervised_weight = ini_scaled_unsupervised_weight * float(num_labels) / float(train_num)
-	print(f"col:{col}   num_labelled:{num_labels}   num_unlabelled:{train_num - num_labels}")
+	print(f"col:{col}")
 	test_sc = 0
-	
 	for epoch in tqdm(range(num_epoches)):
 		optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
-		rampup_val = rampup(epoch)
-		unsupervised_weight = rampup_val * scaled_unsupervised_weight
-		train(train_loader, False, col, unsupervised_weight)#epoch==(num_epoches-1))
+		train(train_loader, False, col)#epoch==(num_epoches-1))
 		#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
 		test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
 		#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
-		#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-		#if((epoch==num_epoches -1)):
-			#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-	print(f"test AUC: {test_sc:.4f}")
+		if(epoch==num_epoches-1):
+			print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
+	col_result.append(col_result)
+#print(col_result)

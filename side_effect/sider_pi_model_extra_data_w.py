@@ -26,7 +26,8 @@ batch_size = 64
 hidden_activation = Softmax()#Tanh()
 conv_depth = 5
 dropout_rate = 0.2
-ini_scaled_unsupervised_weight = 0.01
+#ini_scaled_unsupervised_weight = 1000
+w = [0.01, 0.1, 1, 10, 100, 1000]
 rampup_length = 0
 target_col = [x for x in range(0,6)]
 
@@ -42,7 +43,7 @@ val_num = int(num_data * 0.0)
 test_num = num_data - ori_train_num - val_num
 #print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
-num_extra_data = 8000
+num_extra_data = 0
 train_dataset = SIDER[:ori_train_num] + SIDER[1427:(1427+num_extra_data)]
 test_dataset = SIDER[1427-test_num:1427]
 
@@ -58,7 +59,6 @@ test_loader = DataLoader(test_dataset, batch_size = test_num, shuffle = False)
 #print(f"train_num = {len(train_dataset)}, val_num = {len(validate_loader)}, test_num = {len(test_dataset)}")
 
 print(f"train_num = {len(train_dataset)}, test_num = {len(test_dataset)}")
-print(f"w:{ini_scaled_unsupervised_weight}")
 class AtomBondConv(MessagePassing):
 	def __init__(self, x_dim, edge_attr_dim):
 		super(AtomBondConv, self).__init__(aggr = 'add')
@@ -225,21 +225,23 @@ def get_num_samples(data_loader):
 	return total 
 
 col_result = []
-for col in target_col:
-	num_labels = sum([~torch.isnan(x.y[:,col]) for x in train_dataset]).item()
-	scaled_unsupervised_weight = ini_scaled_unsupervised_weight * float(num_labels) / float(train_num)
-	print(f"col:{col}   num_labelled:{num_labels}   num_unlabelled:{train_num - num_labels}")
-	test_sc = 0
-	
-	for epoch in tqdm(range(num_epoches)):
-		optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
-		rampup_val = rampup(epoch)
-		unsupervised_weight = rampup_val * scaled_unsupervised_weight
-		train(train_loader, False, col, unsupervised_weight)#epoch==(num_epoches-1))
-		#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
-		test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
-		#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
-		#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-		#if((epoch==num_epoches -1)):
+for ini_scaled_unsupervised_weight in w:
+	print(f"w:{ini_scaled_unsupervised_weight}")
+	for col in target_col:
+		num_labels = sum([~torch.isnan(x.y[:,col]) for x in train_dataset]).item()
+		scaled_unsupervised_weight = ini_scaled_unsupervised_weight * float(num_labels) / float(train_num)
+		print(f"col:{col}   num_labelled:{num_labels}   num_unlabelled:{train_num - num_labels}")
+		test_sc = 0
+		
+		for epoch in tqdm(range(num_epoches)):
+			optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
+			rampup_val = rampup(epoch)
+			unsupervised_weight = rampup_val * scaled_unsupervised_weight
+			train(train_loader, False, col, unsupervised_weight)#epoch==(num_epoches-1))
+			#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
+			test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
+			#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
 			#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-	print(f"test AUC: {test_sc:.4f}")
+			#if((epoch==num_epoches -1)):
+				#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
+		print(f"test AUC: {test_sc:.4f}")

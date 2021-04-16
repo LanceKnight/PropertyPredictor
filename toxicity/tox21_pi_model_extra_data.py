@@ -42,14 +42,14 @@ val_num = int(num_data * 0.0)
 test_num = 200#num_data - train_num - val_num
 #print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
-num_extra_data = 8000
+num_extra_data = 0#8000
 
 train_num = ori_train_num + num_extra_data
-train_dataset = Tox21[:1000] + Tox21[9000:(9000+num_extra_data)]
+train_dataset = Tox21[:1000] + Tox21[7831:(7831+num_extra_data)]
 test_dataset = Tox21[7831-test_num:7831]
 
 #sample_index =9000+num_extra_data
-#print(f"sample:{Tox21[sample_index]}")
+#print(f"sample:{Tox21[7831]}")
 #print(f"sample: {train_dataset[sample_index].smiles}  y:{train_dataset[sample_index].y}")
 
 train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
@@ -147,7 +147,7 @@ def train(data_loader, debug_mode, target_col, unsupervised_weight):
 		#print(f"out:{out}\n y:\n{data.y[:,target_col]}")
 		loss = BCELoss_no_NaN(out, data.y[:,target_col])
 		unsupervised_loss = torch.nn.MSELoss()(out, out2)
-		print(f"s_loss:{unsupervised_loss}")
+		#print(f"s_loss:{unsupervised_loss}")
 		total_loss = loss + unsupervised_weight * unsupervised_loss
 		#print(f"loss:{loss}")
 		total_loss.backward()

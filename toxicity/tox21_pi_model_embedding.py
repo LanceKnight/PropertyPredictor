@@ -29,7 +29,7 @@ conv_depth = 5
 dropout_rate = 0.2
 ini_scaled_unsupervised_weight = 100
 rampup_length = 30
-target_col = [9]#[x for x in range(6,12)]
+target_col = [6]#[x for x in range(6,12)]
 
 print(f"target_col:{target_col}")
 Tox21 = MoleculeNet(root = "../data/raw/Tox21", name = "Tox21")
@@ -43,10 +43,10 @@ val_num = int(num_data * 0.0)
 test_num = 200#num_data - train_num - val_num
 #print(f"train_num = {train_num}, val_num = {val_num}, test_num = {test_num}")
 
-num_extra_data = 4000
+num_extra_data = 8000#4000
 train_num = ori_train_num + num_extra_data
-train_dataset = Tox21[:1000] + Tox21[9000:(9000+num_extra_data)]
-test_dataset = Tox21[7631:7831]
+train_dataset = Tox21[:1000] + Tox21[7831:(7831+num_extra_data)]
+test_dataset = Tox21[7831-test_num:7831]
 
 
 #sample_index =999
@@ -142,8 +142,8 @@ def train(data_loader, debug_mode, target_col, unsupervised_weight):
 		out, mol_fp = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
 		out = out.view(len(data.y[:,target_col]))
 
-		out2 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
-		out2 = out.view(len(data.y[:,target_col]))
+		out2,_ = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
+		out2 = out2.view(len(data.y[:,target_col]))
 		#print(f"out.shape:{out.shape},           y.shape{data.y[:, target_col].shape}")
 		#print(f"out:{out}\n y:\n{data.y[:,target_col]}")
 		loss = BCELoss_no_NaN(out, data.y[:,target_col])
@@ -240,6 +240,5 @@ for col in target_col:
 		test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
 		#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
 		#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-		if((epoch==num_epoches -1)):
-			print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-	col_result.append(col_result)
+		
+	print(f"Test AUC:{test_sc: .4f}")

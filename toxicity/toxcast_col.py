@@ -23,7 +23,7 @@ inner_atom_dim = 512
 batch_size = 64
 hidden_activation = Softmax()#Tanh()
 conv_depth = 5
-target_col = [x for x in range(1)]
+target_col = [x for x in range(29, 617)]
 
 print(f"target_col:{target_col}")
 ToxCast = MoleculeNet(root = "../data/raw/ToxCast", name = "ToxCast")
@@ -215,7 +215,8 @@ for col in target_col:
 		#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
 		test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
 		#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
-		if((epoch==num_epoch -1)):
+		if((epoch==num_epoches -1)):
 			print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
 	col_result.append(col_result)
-print(col_result)
+for i in col_result:
+	print(f"i:{i}, AUC:{col_result}")

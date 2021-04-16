@@ -1,0 +1,26 @@
+target_col:[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+original_train_num = 1000 train_num = 2000, test_num = 200
+col:0   num_labelled:951   num_unlabelled:1049
+Epoch:099, Test AUC: 0.8732
+col:1   num_labelled:873   num_unlabelled:1127
+Epoch:099, Test AUC: 0.8790
+col:2   num_labelled:858   num_unlabelled:1142
+Epoch:099, Test AUC: 0.8078
+col:3   num_labelled:747   num_unlabelled:1253
+Epoch:099, Test AUC: 0.7937
+col:4   num_labelled:811   num_unlabelled:1189
+Epoch:099, Test AUC: 0.7200
+col:5   num_labelled:898   num_unlabelled:1102
+Epoch:099, Test AUC: 0.5421
+col:6   num_labelled:837   num_unlabelled:1163
+Epoch:099, Test AUC: 0.7301
+col:7   num_labelled:736   num_unlabelled:1264
+Epoch:099, Test AUC: 0.6905
+col:8   num_labelled:920   num_unlabelled:1080
+Epoch:099, Test AUC: 0.5380
+col:9   num_labelled:820   num_unlabelled:1180
+Epoch:099, Test AUC: 0.5855
+col:10   num_labelled:743   num_unlabelled:1257
+Epoch:099, Test AUC: 0.7578
+col:11   num_labelled:873   num_unlabelled:1127
+Epoch:099, Test AUC: 0.6308

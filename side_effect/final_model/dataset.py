@@ -19,7 +19,7 @@ train_dataset =[]
 val_dataset = []
 test_dataset =[]
 train_num = 0
-def Get_Loaders(num_extra_data, batch_size):
+def get_loaders(num_extra_data, batch_size):
 	global train_dataset
 	global val_dataset
 	global test_dataset 
@@ -48,7 +48,7 @@ def Get_Loaders(num_extra_data, batch_size):
 	test_loader = DataLoader(test_dataset, batch_size = test_num, shuffle = True)
 	return train_loader, val_loader, test_loader
 
-def Get_Stats(col):
+def get_stats(col):
 	'''
 	Get the number of unlabeled
 	'''

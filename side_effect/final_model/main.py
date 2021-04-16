@@ -9,18 +9,20 @@ import sys
 import math
 from statistics import mean
 import numpy as np
-from rdkit.Chem import MolFromSmiles
-import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
-import rdkit.Chem.EState as EState
-import rdkit.Chem.rdPartialCharges as rdPartialCharges
-from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
+#from rdkit.Chem import MolFromSmiles
+#import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
+#import rdkit.Chem.EState as EState
+#import rdkit.Chem.rdPartialCharges as rdPartialCharges
+#from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 from tqdm import tqdm
 import pandas as pd
 
-from molecule_processing import batch2attributes, num_node_features, num_edge_features
-from dataset import Get_Loaders, Get_Stats
+from molecule_processing import num_node_features, num_edge_features#, batch2attributes
+from dataset import get_loaders, get_stats
 from printing import tee_print, set_output_file, print_val_test_auc
 from config_parser import get_config, set_config_file
+from training import train
+from testing import test
 
 
 config_file = sys.argv[1]
@@ -56,7 +58,7 @@ set_output_file(output_file)
 
 tee_print(f"target_col:{target_col} use_ssl:{use_SSL}")
 
-train_loader, val_loader, test_loader = Get_Loaders(num_extra_data, batch_size)
+train_loader, val_loader, test_loader = get_loaders(num_extra_data, batch_size)
 		
 class AtomBondConv(MessagePassing):
 	def __init__(self, x_dim, edge_attr_dim):
@@ -123,139 +125,8 @@ def rampup(epoch):
     else:
         return 1.0
 
-def BCELoss_no_NaN(out, target):
-	#print(f"out.shape:{out.shape}             target.shape:{target.shape}")
-	#target_no_NaN = torch.where(torch.isnan(target), out, target)
-	target_no_NaN = target[~torch.isnan(target)]
-	out = out[~torch.isnan(target)]
-	target_no_NaN = target_no_NaN.detach() 
-	
-	#print(f"target_no_NaN:{target_no_NaN}")
-	return torch.nn.BCELoss()(out, target_no_NaN)
 
 
-def train(data_loader, debug_mode, target_col, unsupervised_weight):
-	model.train()
-	u_loss_lst = []
-	s_loss_lst = []
-	t_loss_lst = []
-	for i,  data in enumerate(data_loader):
-		#print(f"i:{i}, smi:{data.smiles}")
-		x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
-		#print(f"before- data.x:{data.x.shape}, edge_attr:{data.edge_attr.shape}")
-		data.x = x
-		data.edge_attr = edge_attr
-		data.to(device)
-	
-
-		#print(f"data.x:{data.x.shape}")
-		#print(f"data.edge_attr:{data.edge_attr.shape}")
-		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
-		out = out.view(len(data.y[:,target_col]))
-
-		#print(f"out.shape:{out.shape},           y.shape{data.y[:, target_col].shape}")
-		#print(f"out:{out}\n y:\n{data.y[:,target_col]}")
-		loss = BCELoss_no_NaN(out, data.y[:,target_col])
-		#print(f"out:\n{out}, out2:\n{out2} ")
-		if use_SSL == True:
-			out2 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
-			out2 = out2.view(len(data.y[:,target_col]))
-
-			out3 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
-			out3 = out3.view(len(data.y[:,target_col]))
-			unsupervised_loss = torch.nn.MSELoss()(out3, out2)
-			total_loss = loss + unsupervised_weight * unsupervised_loss
-			u_loss_lst.append(unsupervised_weight*unsupervised_loss.item())
-			s_loss_lst.append(loss.item())
-			t_loss_lst.append(total_loss.item())
-			print(f"u_loss:{unsupervised_loss:.4f}  unsupervised_weight:{unsupervised_weight}    product:{unsupervised_weight* unsupervised_loss:.4f} loss:{loss:.4f} total loss:{total_loss:.4f}")
-		else:
-			total_loss = loss
-		#print(f"loss:{loss}")
-		total_loss.backward()
-		optimizer.step()
-		optimizer.zero_grad()
-		if(debug_mode):
-			out_list = out.cpu().detach().numpy()
-			y_list = data.y.cpu().detach().numpy()
-			#print(f"{len(out_list)}, {len(y_list)}")
-			for i in range(len(out_list)): 
-				print(f"{out_list[i][0]}, {y_list[i][0]}") # for making correlation plot
-		
-	u_loss = mean(u_loss_lst)
-	s_loss = mean(s_loss_lst)
-	t_loss = mean(t_loss_lst)
-	print(f"u_loss:{u_loss:.4f}    s_loss:{s_loss:.4f}     t_loss:{t_loss:.4f}")
-
-
-def roc_auc_score_one_class_compatible(y_true, y_predict):
-	if len(set(y_true)) == 1:
-		pass
-	else:
-		return roc_auc_score(y_true, y_predict)
-
-def pr_auc(y_true, y_predict):
-	precision, recall, _ = precision_recall_curve(y_true, y_predict)
-	auc_score = auc(recall, precision)	
-	return auc_score
-
-def test(data_loader, debug_mode, target_col):
-	model.eval()
-
-	auc_lst = []
-	for data in data_loader:
-		x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
-		data.x = x
-		data.edge_attr = edge_attr
-		data.to(device)	
-
-		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True) # use our own x and edge_attr instead of data.x and data.edge_attr
-
-		#==========convert to numpy array
-		out = out.view(len(out))	
-		out = out.cpu().detach().numpy()
-		#print(f"out:{out}")
-		y = data.y[:,target_col]
-		y = y.view(len(y)).cpu().detach().numpy()
-		#print(f"y:{y}")
-		#==========remove NaN
-		out = out[~np.isnan(y)]
-		y = y[~np.isnan(y)]
-
-		#print(f"data.y.shape:{y}   out.shape:{out})")
-		sc = roc_auc_score_one_class_compatible(y, out)
-		#sc = pr_auc(y, out)
-		auc_lst.append(sc)
-		if(debug_mode):
-			#p = pred.cpu().detach().numpy()
-			#y = data.y.cpu().detach().numpy()
-			#for debugging
-#			print(f"pred:============")
-#			for i in range(len(p)):
-#				print(p[i][0])
-#			print(f"y:============")
-#			for i in range(len(y)):
-#				print(y[i][0])
-#			print(f"diff:============")
-#			for i in range(len(y)):
-#				print((p[i]-y[i])[0])
-#			print(f"pow:============")
-#			for i in range(len(y)):
-#				print((pow(p[i]-y[i],2))[0])
-#			print(f"sum=======")
-#			print(t)
-
-
-			# for plotting 
-			out_list = out.cpu().detach().numpy()
-			y_list = data.y.cpu().detach().numpy()
-			#print(f"{len(out_list)}, {len(y_list)}")
-			for i in range(len(out_list)): 
-				print(f"{out_list[i][0]}, {y_list[i][0]}") # for making correlation plot
-	if(debug_mode):
-		pass
-		#print(f"squared_error_sum: {squared_error_sum}, len:{num_samples}, MSE:{MSE}")	
-	return mean(auc_lst)
 
 def get_num_samples(data_loader):
 	num_graph_in_last_batch = list(data_loader)[-1].num_graphs
@@ -278,7 +149,7 @@ for ini_scaled_unsupervised_weight in w:
 	val_auc_per_epoch.append(ini_scaled_unsupervised_weight)
 	test_auc_per_epoch.append(ini_scaled_unsupervised_weight)
 	for col in target_col:
-		num_train, num_labels, num_unlabeled = Get_Stats(col)
+		num_train, num_labels, num_unlabeled = get_stats(col)
 		scaled_unsupervised_weight = ini_scaled_unsupervised_weight * float(num_labels) / float(num_train)
 		test_sc = 0
 		model = MyNet(num_node_features, num_edge_features, conv_depth).to(device)#Get_Net(num_node_features, num_edge_features, conv_depth, inner_atom_dim, dropout_rate).to(device)
@@ -295,13 +166,13 @@ for ini_scaled_unsupervised_weight in w:
 			lrs.append(optimizer.param_groups[0]["lr"])
 			rampup_val = rampup(epoch)
 			unsupervised_weight = rampup_val * scaled_unsupervised_weight
-			train(train_loader, False, col, unsupervised_weight)#epoch==(num_epoches-1))
+			train(model, train_loader,  col, unsupervised_weight, device, optimizer, use_SSL = use_SSL, debug_mode = False)#epoch==(num_epoches-1))
 			scheduler.step()
 			#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
 			#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
 			#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-			val_sc = test(val_loader, False, col)
-			test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
+			val_sc = test(model, val_loader, False, col, device)
+			test_sc = test(model, test_loader, False, col, device)# epoch==(num_epoches-1))
 			val_auc_per_epoch.append(val_sc)
 			test_auc_per_epoch.append(test_sc)
 			if val_sc > previous_val_sc:

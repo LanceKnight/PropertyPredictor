@@ -6,6 +6,7 @@ from torch.nn import Linear, Tanh, Softmax, Sigmoid, Dropout
 from torch_geometric.nn import MessagePassing, global_add_pool
 from torch_geometric.utils import add_self_loops
 
+import sys
 import math
 from statistics import mean
 import numpy as np
@@ -13,38 +14,60 @@ from rdkit.Chem import MolFromSmiles
 import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
 import rdkit.Chem.EState as EState
 import rdkit.Chem.rdPartialCharges as rdPartialCharges
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 from tqdm import tqdm
+import pandas as pd
 
 from molecule_processing import batch2attributes, num_node_features, num_edge_features
 from dataset import Get_Loaders, Get_Stats
 #from network import Get_Net
-from printing import tee_print
+from printing import tee_print, set_output_file
+from config_parser import Get_Config, Set_Config_File
+#import dataset
+#import printing
 
-num_epoches = 100
-inner_atom_dim = 512
-batch_size = 64
-hidden_activation = Softmax()#Tanh()
-conv_depth = 5
-dropout_rate = 0.2
-#ini_scaled_unsupervised_weight = 1000
-w = [70, 80, 90]
-rampup_length = 0
-target_col = [1]#[x for x in range(0,6)]
 
-print(f"target_col:{target_col}")
+config_file = sys.argv[1]
+Set_Config_File(config_file)
 
-train_loader, val_loader, test_loader = Get_Loaders(batch_size)
+num_epochs = int(Get_Config('cfg','num_epochs'))
+p = int(Get_Config('cfg','p'))
+inner_atom_dim = int(Get_Config('cfg','inner_atom_dim'))
+batch_size = int(Get_Config('cfg','batch_size'))
+hidden_activation = Get_Config('cfg','hidden_activation')
+conv_depth = int(Get_Config('cfg','conv_depth'))
+unsup_dropout_rate = float(Get_Config('cfg','unsup_dropout_rate'))
+sup_dropout_rate = float(Get_Config('cfg','sup_dropout_rate'))
+w = Get_Config('cfg','w')
+rampup_length = int(Get_Config('cfg','rampup_length'))
+target_col = Get_Config('cfg','target_col')
+num_extra_data = int(Get_Config('cfg','num_extra_data'))
+output_file = Get_Config('cfg','output_file')
+#headers = Get_Config('cfg', 'headers')
+csv_file = Get_Config('cfg','csv_file')
+use_SSL = bool(int(Get_Config('cfg', 'use_ssl')))
+
+set_output_file(output_file)
+
+tee_print(f"target_col:{target_col} use_ssl:{use_SSL}")
+
+train_loader, val_loader, test_loader = Get_Loaders(num_extra_data, batch_size)
 		
 class AtomBondConv(MessagePassing):
 	def __init__(self, x_dim, edge_attr_dim):
 		super(AtomBondConv, self).__init__(aggr = 'add')
 		self.W_in = Linear(x_dim + edge_attr_dim, x_dim)
-		self.dropout = torch.nn.Dropout(dropout_rate)
-	def forward(self, x, edge_index, edge_attr, smiles, batch):		
+		#self.dropout = torch.nn.Dropout(dropout_rate)
+		self.unsup_dropout = torch.nn.Dropout(unsup_dropout_rate)
+		self.sup_dropout = torch.nn.Dropout(sup_dropout_rate)
+	def forward(self, x, edge_index, edge_attr, smiles, batch, is_supervised ):		
+		if is_supervised:
+			dropout = self.sup_dropout
+		else:
+			dropout = self.unsup_dropout
 		edge_index, _ = add_self_loops(edge_index, num_nodes = x.size(0))
 		x = self.propagate(edge_index, x = x, edge_attr = edge_attr)
-		x = self.dropout(self.W_in(x))
+		x = dropout(self.W_in(x))
 		return x
 
 	def message(self, x, x_j, edge_attr):
@@ -62,26 +85,29 @@ class MyNet(torch.nn.Module):
 		self.lin1 = Linear(inner_atom_dim, 50)
 		self.lin2 = Linear(50, 1)
 		self.depth = depth
-		self.dropout = torch.nn.Dropout(dropout_rate)
-
-	def forward(self, x, edge_index, edge_attr, smiles, batch):
+		self.unsup_dropout = torch.nn.Dropout(unsup_dropout_rate)
+		self.sup_dropout = torch.nn.Dropout(sup_dropout_rate)
+	def forward(self, x, edge_index, edge_attr, smiles, batch, is_supervised):
+		if is_supervised:
+			dropout = self.sup_dropout
+		else:
+			dropout = self.unsup_dropout
 		molecule_fp_lst = []
 		for i in range(0, self.depth+1):
 			atom_fp = Softmax(dim=1)(self.W_out(x))	
 			molecule_fp = global_add_pool(atom_fp, batch)
 			molecule_fp_lst.append(molecule_fp)
-			x = self.atom_bond_conv(x, edge_index, edge_attr, smiles, batch)
+			x = self.atom_bond_conv(x, edge_index, edge_attr, smiles, batch, is_supervised)
 
 		overall_molecule_fp	= torch.stack(molecule_fp_lst, dim=0).sum(dim=0)	
-		hidden = self.dropout(self.lin1(overall_molecule_fp))
-		out = self.dropout(self.lin2(hidden))
+		hidden = dropout(self.lin1(overall_molecule_fp))
+		out = dropout(self.lin2(hidden))
 		return Sigmoid()(out)
 		
 is_cuda = torch.cuda.is_available()
 #print(f"is_cuda:{is_cuda}")
 
 device = torch.device('cuda' if is_cuda else 'cpu')
-model = MyNet(num_node_features, num_edge_features, conv_depth).to(device)#Get_Net(num_node_features, num_edge_features, conv_depth, inner_atom_dim, dropout_rate).to(device)
 #criterion = torch.nn.BCELoss()
 
 def rampup(epoch):
@@ -105,6 +131,9 @@ def BCELoss_no_NaN(out, target):
 
 def train(data_loader, debug_mode, target_col, unsupervised_weight):
 	model.train()
+	u_loss_lst = []
+	s_loss_lst = []
+	t_loss_lst = []
 	for i,  data in enumerate(data_loader):
 		#print(f"i:{i}, smi:{data.smiles}")
 		x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
@@ -116,18 +145,27 @@ def train(data_loader, debug_mode, target_col, unsupervised_weight):
 
 		#print(f"data.x:{data.x.shape}")
 		#print(f"data.edge_attr:{data.edge_attr.shape}")
-		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
+		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
 		out = out.view(len(data.y[:,target_col]))
 
-		out2 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch)# use our own x and edge_attr instead of data.x and data.edge_attr
-		out2 = out2.view(len(data.y[:,target_col]))
 		#print(f"out.shape:{out.shape},           y.shape{data.y[:, target_col].shape}")
 		#print(f"out:{out}\n y:\n{data.y[:,target_col]}")
 		loss = BCELoss_no_NaN(out, data.y[:,target_col])
-		unsupervised_loss = torch.nn.MSELoss()(out, out2)
 		#print(f"out:\n{out}, out2:\n{out2} ")
-		#print(f"u_loss:{unsupervised_loss}")
-		total_loss = loss + unsupervised_weight * unsupervised_loss
+		if use_SSL == True:
+			out2 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
+			out2 = out2.view(len(data.y[:,target_col]))
+
+			out3 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
+			out3 = out3.view(len(data.y[:,target_col]))
+			unsupervised_loss = torch.nn.MSELoss()(out3, out2)
+			total_loss = loss + unsupervised_weight * unsupervised_loss
+			u_loss_lst.append(unsupervised_weight*unsupervised_loss.item())
+			s_loss_lst.append(loss.item())
+			t_loss_lst.append(total_loss.item())
+			print(f"u_loss:{unsupervised_loss:.4f}  unsupervised_weight:{unsupervised_weight}    product:{unsupervised_weight* unsupervised_loss:.4f} loss:{loss:.4f} total loss:{total_loss:.4f}")
+		else:
+			total_loss = loss
 		#print(f"loss:{loss}")
 		total_loss.backward()
 		optimizer.step()
@@ -138,7 +176,24 @@ def train(data_loader, debug_mode, target_col, unsupervised_weight):
 			#print(f"{len(out_list)}, {len(y_list)}")
 			for i in range(len(out_list)): 
 				print(f"{out_list[i][0]}, {y_list[i][0]}") # for making correlation plot
-	
+		
+	u_loss = mean(u_loss_lst)
+	s_loss = mean(s_loss_lst)
+	t_loss = mean(t_loss_lst)
+	print(f"u_loss:{u_loss:.4f}    s_loss:{s_loss:.4f}     t_loss:{t_loss:.4f}")
+
+
+def roc_auc_score_one_class_compatible(y_true, y_predict):
+	if len(set(y_true)) == 1:
+		pass
+	else:
+		return roc_auc_score(y_true, y_predict)
+
+def pr_auc(y_true, y_predict):
+	precision, recall, _ = precision_recall_curve(y_true, y_predict)
+	auc_score = auc(recall, precision)	
+	return auc_score
+
 def test(data_loader, debug_mode, target_col):
 	model.eval()
 
@@ -149,7 +204,7 @@ def test(data_loader, debug_mode, target_col):
 		data.edge_attr = edge_attr
 		data.to(device)	
 
-		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch) # use our own x and edge_attr instead of data.x and data.edge_attr
+		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True) # use our own x and edge_attr instead of data.x and data.edge_attr
 
 		#==========convert to numpy array
 		out = out.view(len(out))	
@@ -163,10 +218,8 @@ def test(data_loader, debug_mode, target_col):
 		y = y[~np.isnan(y)]
 
 		#print(f"data.y.shape:{y}   out.shape:{out})")
-		if (len(out) !=0):
-			sc = roc_auc_score(y, out)
-		else:
-			sc = 0
+		#sc = roc_auc_score(y, out)
+		sc = pr_auc(y, out)
 		auc_lst.append(sc)
 		if(debug_mode):
 			#p = pred.cpu().detach().numpy()
@@ -206,29 +259,51 @@ def get_num_samples(data_loader):
 	#print(f"len(data_loader):{len(data_loader)}, last batch:{num_graph_in_last_batch},  total:{total}")
 	return total 
 
-new_file = True
+
+val_auc = ['val']
+test_auc = ['test']
 for ini_scaled_unsupervised_weight in w:
-	#print(f"w:{ini_scaled_unsupervised_weight}")
+	tee_print("\n")		
 	for col in target_col:
-		#num_labels = sum([~torch.isnan(x.y[:,col]) for x in train_dataset]).item()
 		num_train, num_labels, num_unlabeled = Get_Stats(col)
 		scaled_unsupervised_weight = ini_scaled_unsupervised_weight * float(num_labels) / float(num_train)
-		print(f"col:{col}   num_labelled:{num_labels}   num_unlabelled:{num_unlabeled}")
 		test_sc = 0
-				
-		for epoch in tqdm(range(num_epoches)):
-			optimizer = torch.optim.Adam(model.parameters(), lr = 0.0007 * math.exp(-epoch/30 ))#, weight_decay = 5e-4)
+		model = MyNet(num_node_features, num_edge_features, conv_depth).to(device)#Get_Net(num_node_features, num_edge_features, conv_depth, inner_atom_dim, dropout_rate).to(device)
+		previous_val_sc = 999
+		patience_count = 0
+		for epoch in tqdm(range(num_epochs)):
+			optimizer = torch.optim.Adam(model.parameters(), lr = 0.00007* math.exp(-epoch/30 ))#, weight_decay = 5e-4)
 			rampup_val = rampup(epoch)
 			unsupervised_weight = rampup_val * scaled_unsupervised_weight
 			train(train_loader, False, col, unsupervised_weight)#epoch==(num_epoches-1))
 			#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
-			val_sc = test(val_loader, False, col)
-			test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
 			#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
 			#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-			#if((epoch==num_epoches -1)):
-				#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-		output_fstring = f"col:{col}, extra_unlabeled:{num_extra_data}, w:{ini_scaled_unsupervised_weight}  val_sc:{val_sc:.4f}, test AUC: {test_sc:.4f}"
-		tee_print(output_fstring, sys.argv[1], new_file)
-		new_file = False
-		
+			val_sc = test(val_loader, False, col)
+			test_sc = test(test_loader, False, col)# epoch==(num_epoches-1))
+			if val_sc > previous_val_sc:
+				patience_count +=1
+				if(patience_count == p):
+					print(f"consecutive {p} epochs without validation set improvement. Break early at epoch {epoch}")
+					break
+
+			if((epoch%1 == 0)):
+				print(f"Epoch:{epoch:03d}, val AUC: {val_sc: .4f}  test_AUC:{test_sc:.4f}")
+			previous_val_sc = val_sc
+		tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{ini_scaled_unsupervised_weight}  val_sc:{val_sc:.4f}             test AUC: {test_sc:.4f}")
+		val_auc.append(val_sc)
+		test_auc.append(test_sc)
+	
+
+df = pd.DataFrame()
+for i in range(len(w)):
+	val_auc.insert(i*(len(target_col)+1)+1, w[i])
+for i in range(len(w)):
+	test_auc.insert(i*(len(target_col)+1)+1, w[i])
+#print(f"headers:{headers}, len:{len(headers)}")
+print(f"val_auc:{val_auc}, len:{len(val_auc)}")
+print(f"test_auc:{test_auc}, len:{len(test_auc)}")
+df = df.append(val_auc)
+df = df.append(test_auc)
+df.to_csv(csv_file)	
+

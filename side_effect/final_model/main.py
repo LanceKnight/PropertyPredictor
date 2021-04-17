@@ -190,7 +190,7 @@ for lr_init in lr_init_lst:
 						#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
 						train_sc = round(test(model, train_loader, False, col, device),4)
 						val_sc = round(test(model, val_loader, False, col, device),4)
-						test_sc = round(test(model, test_loader, False, col, device)4,)
+						test_sc = round(test(model, test_loader, False, col, device),4)
 						train_auc_per_epoch.append(train_sc)
 						val_auc_per_epoch.append(val_sc)
 						test_auc_per_epoch.append(test_sc)

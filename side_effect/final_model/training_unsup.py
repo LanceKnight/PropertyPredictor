@@ -47,6 +47,7 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 	s_loss_lst = []
 	t_loss_lst = []
 	for i,  data in enumerate(data_loader):
+
 		#print(f"i:{i}, smi:{data.smiles}")
 		x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
 		#print(f"before- data.x:{data.x.shape}, edge_attr:{data.edge_attr.shape}")
@@ -75,11 +76,11 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 				u_loss_lst.append(unsupervised_weight*unsupervised_loss.item())
 				s_loss_lst.append(loss.item())
 				t_loss_lst.append(total_loss.item())
-				#print(f"u_loss:{unsupervised_weight* unsupervised_loss:8.4f} || s_loss:{loss:8.4f} || t_loss:{total_loss:8.4f} || -- ori_u_loss:{unsupervised_loss:8.4f}  unsupervised_weight:{unsupervised_weight}")
+				print(f"u_loss:{unsupervised_weight* unsupervised_loss:8.4f} || s_loss:{loss:8.4f} || t_loss:{total_loss:8.4f} || -- ori_u_loss:{unsupervised_loss:8.4f}  unsupervised_weight:{unsupervised_weight}")
 			else:
 				total_loss = loss
 				t_loss_lst.append(total_loss.item())
-				#print(f"t_loss:{total_loss}")
+				print(f"t_loss:{total_loss}")
 			total_loss.backward()
 			optimizer.step()
 			optimizer.zero_grad()

@@ -156,7 +156,7 @@ for lr_init in lr_init_lst:
 				test_auc_per_epoch.append(ini_scaled_unsupervised_weight)
 				for col in target_col:
 					num_train, num_labels, num_unlabeled = get_stats(col)
-					scaled_unsupervised_weight = ini_scaled_unsupervised_weight * float(num_labels) / float(num_train)
+					#scaled_unsupervised_weight = ini_scaled_unsupervised_weight * float(num_labels) / float(num_train)
 					test_sc = 0
 					model = MyNet(num_node_features, num_edge_features, conv_depth).to(device)#Get_Net(num_node_features, num_edge_features, conv_depth, inner_atom_dim, dropout_rate).to(device)
 
@@ -172,7 +172,7 @@ for lr_init in lr_init_lst:
 						
 						lrs.append(optimizer.param_groups[0]["lr"])
 						rampup_val = rampup(epoch)
-						unsupervised_weight = rampup_val * scaled_unsupervised_weight
+						unsupervised_weight = rampup_val * ini_scaled_unsupervised_weight
 						train(model, train_loader,  col, unsupervised_weight, device, optimizer, use_SSL = use_SSL, debug_mode = False)#epoch==(num_epoches-1))
 						scheduler.step()
 						#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
@@ -196,7 +196,7 @@ for lr_init in lr_init_lst:
 							print(f"Epoch:{epoch:03d}, train AUC: {train_sc: .4f}   val AUC: {val_sc: .4f}  test_AUC:{test_sc:.4f}")
 						previous_val_sc = val_sc
 					print(f"lrs:{lrs}")
-					tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{ini_scaled_unsupervised_weight}  val_sc:{val_sc:.4f}             test AUC: {test_sc:.4f}")
+					tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{ini_scaled_unsupervised_weight}     train_sc:{train_sc:.4f} val_sc:{val_sc:.4f} test AUC: {test_sc:.4f}")
 					train_auc.append(train_sc)
 					val_auc.append(val_sc)
 					test_auc.append(test_sc)

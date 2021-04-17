@@ -28,9 +28,7 @@ from testing import test
 config_file = sys.argv[1]
 set_config_file(config_file)
 
-rampup_length = int(get_config('unsupervised','rampup_length'))
 target_col = get_config('cfg','target_col')
-num_extra_data = int(get_config('unsupervised','num_extra_data'))
 
 inner_atom_dim = int(get_config('architecture','inner_atom_dim'))
 #hidden_activation = get_config('architecture','hidden_activation')
@@ -39,11 +37,19 @@ sup_dropout_rate = float(get_config('architecture','sup_dropout_rate'))
 
 batch_size = int(get_config('training','batch_size'))
 num_epochs = int(get_config('training','num_epochs'))
-p = int(get_config('training','patience'))
+patience = int(get_config('training','patience'))
 
+use_SSL = bool(int(get_config('unsupervised', 'use_ssl')))
 unsup_dropout_rate = float(get_config('unsupervised','unsup_dropout_rate'))
 w = get_config('unsupervised','w')
-use_SSL = bool(int(get_config('unsupervised', 'use_ssl')))
+edge_dropout_rate = float(get_config('unsupervised','edge_dropout_rate'))
+rampup_length = int(get_config('unsupervised','rampup_length'))
+if use_SSL == False:
+	num_extra_data = 0
+else:
+	num_extra_data = int(get_config('unsupervised','num_extra_data'))
+
+
 
 lr_init_lst = get_config('lr','lr_init')
 lr_base_lst = get_config('lr', 'lr_base')
@@ -173,7 +179,7 @@ for lr_init in lr_init_lst:
 						lrs.append(optimizer.param_groups[0]["lr"])
 						rampup_val = rampup(epoch)
 						unsupervised_weight = rampup_val * ini_scaled_unsupervised_weight
-						train(model, train_loader,  col, unsupervised_weight, device, optimizer, use_SSL = use_SSL, debug_mode = False)#epoch==(num_epoches-1))
+						train(model, train_loader,  col, unsupervised_weight, device, optimizer, use_SSL = use_SSL, debug_mode = False, edge_dropout_rate = edge_dropout_rate)#epoch==(num_epoches-1))
 						scheduler.step()
 						#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
 						#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
@@ -186,8 +192,8 @@ for lr_init in lr_init_lst:
 						test_auc_per_epoch.append(test_sc)
 						if val_sc > previous_val_sc:
 							patience_count +=1
-							if(patience_count == p):
-								print(f"consecutive {p} epochs without validation set improvement. Break early at epoch {epoch}")
+							if(patience_count == patience):
+								print(f"consecutive {patience} epochs without validation set improvement. Break early at epoch {epoch}")
 								break
 						else:
 							patience_count = 0			

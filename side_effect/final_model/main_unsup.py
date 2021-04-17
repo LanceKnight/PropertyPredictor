@@ -28,10 +28,7 @@ from testing import test
 config_file = sys.argv[1]
 set_config_file(config_file)
 
-patience = int(get_config('cfg','p'))
-rampup_length = int(get_config('cfg','rampup_length'))
 target_col = get_config('cfg','target_col')
-num_extra_data = int(get_config('cfg','num_extra_data'))
 
 inner_atom_dim = int(get_config('architecture','inner_atom_dim'))
 #hidden_activation = get_config('architecture','hidden_activation')
@@ -40,11 +37,18 @@ sup_dropout_rate = float(get_config('architecture','sup_dropout_rate'))
 
 batch_size = int(get_config('training','batch_size'))
 num_epochs = int(get_config('training','num_epochs'))
+patience = int(get_config('training','patience'))
 
+use_SSL = bool(int(get_config('unsupervised', 'use_ssl')))
 unsup_dropout_rate = float(get_config('unsupervised','unsup_dropout_rate'))
 w = get_config('unsupervised','w')
-use_SSL = bool(int(get_config('unsupervised', 'use_ssl')))
 edge_dropout_rate = float(get_config('unsupervised','edge_dropout_rate'))
+rampup_length = int(get_config('unsupervised','rampup_length'))
+if use_SSL == False:
+	num_extra_data = 0
+else:
+	num_extra_data = int(get_config('unsupervised','num_extra_data'))
+
 
 
 lr_init_lst = get_config('lr','lr_init')

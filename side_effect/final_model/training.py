@@ -76,11 +76,11 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 				u_loss_lst.append(unsupervised_weight*unsupervised_loss.item())
 				s_loss_lst.append(loss.item())
 				t_loss_lst.append(total_loss.item())
-				print(f"u_loss:{unsupervised_weight* unsupervised_loss:8.4f} || s_loss:{loss:8.4f} || t_loss:{total_loss:8.4f} || -- ori_u_loss:{unsupervised_loss:8.4f}  unsupervised_weight:{unsupervised_weight}")
+				#print(f"u_loss:{unsupervised_weight* unsupervised_loss:8.4f} || s_loss:{loss:8.4f} || t_loss:{total_loss:8.4f} || -- ori_u_loss:{unsupervised_loss:8.4f}  unsupervised_weight:{unsupervised_weight}")
 			else:
 				total_loss = loss
 				t_loss_lst.append(total_loss.item())
-				print(f"t_loss:{total_loss}")
+				#print(f"t_loss:{total_loss}")
 			total_loss.backward()
 			optimizer.step()
 			optimizer.zero_grad()

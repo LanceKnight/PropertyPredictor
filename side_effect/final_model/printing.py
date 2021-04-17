@@ -34,7 +34,7 @@ def print_val_test_auc(train_auc, val_auc, test_auc, final_auc_file):
 	df = pd.DataFrame()
 	#print(f"val_auc:{val_auc}, len:{len(val_auc)}")
 	#print(f"test_auc:{test_auc}, len:{len(test_auc)}")
-	df = df.append(train_auc)
-	df = df.append(val_auc)
-	df = df.append(test_auc)
+	df['train'] = train_auc
+	df['val']= val_auc
+	df['test']= test_auc
 	df.to_csv(final_auc_file)	

@@ -1,5 +1,9 @@
 import torch
+from torch_geometric.utils import dropout_adj
+
 from statistics import mean
+
+
 
 from molecule_processing import batch2attributes
 
@@ -12,7 +16,32 @@ def BCELoss_no_NaN(out, target):
 	#print(f"target_no_NaN:{target_no_NaN}")
 	return torch.nn.BCELoss()(out, target_no_NaN)
 
-def train(model, data_loader, target_col, unsupervised_weight, device, optimizer, use_SSL=True, debug_mode=False):
+def get_unsupervised_loss(method=None, **kwargs):
+	loss = torch.tensor([0])
+	if method == 'pi_model':
+		model = kwargs['model']
+		data = kwargs['data']
+		edge_dropout_rate = kwargs['edge_dropout_rate']
+		target_col = kwargs['target_col']
+		#print(f"edge_index:{data.edge_index.shape} edge_attr:{data.edge_attr.shape}")
+		edge_index2, edge_attr2 =  dropout_adj(data.edge_index, data.edge_attr, p = edge_dropout_rate)
+		#edge_index3, edge_attr3 =  dropout_adj(data.edge_index, data.edge_attr, p = edge_dropout_rate)
+		#print(f"edge_index:{edge_index2.shape} edge_attr:{edge_attr2.shape}")
+		#print(f"edge_index:{edge_index3.shape} edge_attr:{edge_attr3.shape}")
+		out2 = model(data.x.float(), edge_index2, edge_attr2, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
+		out2 = out2.view(len(data.y[:,target_col]))
+
+		out3 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
+		out3 = out3.view(len(data.y[:,target_col]))
+		loss = torch.nn.MSELoss()(out3, out2)
+	elif method == 'edge_dropout':
+		pass	
+	else:
+		print('cannot get unsupervised loss!')
+
+	return loss
+
+def train(model, data_loader, target_col, unsupervised_weight, device, optimizer, use_SSL=True, debug_mode=False, **kwargs):
 	model.train()
 	u_loss_lst = []
 	s_loss_lst = []
@@ -40,12 +69,8 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 			#print(f"out:\n{out}, data.y[:,target_col]:\n{data.y[:,target_col]} ")
 		else:
 			if use_SSL == True:
-				out2 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
-				out2 = out2.view(len(data.y[:,target_col]))
-
-				out3 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
-				out3 = out3.view(len(data.y[:,target_col]))
-				unsupervised_loss = torch.nn.MSELoss()(out3, out2)
+				#unsupervised_loss = get_unsupervised_loss(method = 'pi_model', model = model, data = data, target_col = target_col) 
+				unsupervised_loss = get_unsupervised_loss(method = 'pi_model', model = model, data = data, target_col = target_col, edge_dropout_rate =kwargs['edge_dropout_rate']) 
 				total_loss = loss + unsupervised_weight * unsupervised_loss
 				u_loss_lst.append(unsupervised_weight*unsupervised_loss.item())
 				s_loss_lst.append(loss.item())

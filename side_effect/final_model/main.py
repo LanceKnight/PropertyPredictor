@@ -171,6 +171,10 @@ for lr_init in lr_init_lst:
 					scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
 					previous_val_sc = 999
 					patience_count = 0
+					train_auc.append(col)
+					val_auc.append(col)
+					test_auc.append(col)
+
 					train_auc_per_epoch.append(col)
 					val_auc_per_epoch.append(col)
 					test_auc_per_epoch.append(col)
@@ -184,9 +188,9 @@ for lr_init in lr_init_lst:
 						#train_sc = test(train_loader, False)#  epoch==(num_epoches-1))
 						#print(f"Epoch:{epoch:03d}, Train AUC:{train_sc: .4f}, Test AUC:{test_sc: .4f}")
 						#print(f"Epoch:{epoch:03d}, Test AUC:{test_sc: .4f}")
-						train_sc = test(model, train_loader, False, col, device)
-						val_sc = test(model, val_loader, False, col, device)
-						test_sc = test(model, test_loader, False, col, device)# epoch==(num_epoches-1))
+						train_sc = round(test(model, train_loader, False, col, device),4)
+						val_sc = round(test(model, val_loader, False, col, device),4)
+						test_sc = round(test(model, test_loader, False, col, device)4,)
 						train_auc_per_epoch.append(train_sc)
 						val_auc_per_epoch.append(val_sc)
 						test_auc_per_epoch.append(test_sc)

@@ -4,9 +4,13 @@ from torch_geometric.nn import MessagePassing, global_add_pool
 from torch_geometric.utils import add_self_loops
 
 
+from molecule_processing import num_node_features, num_edge_features#, batch2attributes
 
 
 class AtomBondConv(MessagePassing):
+	global sup_dropout_rate
+	global inner_atom_dim
+	global unsup_dropout_rate
 	def __init__(self, x_dim, edge_attr_dim):
 		super(AtomBondConv, self).__init__(aggr = 'add')
 		self.W_in = Linear(x_dim + edge_attr_dim, x_dim)
@@ -31,6 +35,8 @@ class AtomBondConv(MessagePassing):
 
 
 class MyNet(torch.nn.Module):
+	global sup_dropout_rate
+	global unsup_dropout_rate
 	def __init__(self, num_node_features, num_edge_features, depth):
 		super(MyNet, self).__init__()
 		self.atom_bond_conv = AtomBondConv(num_node_features, num_edge_features)
@@ -57,6 +63,20 @@ class MyNet(torch.nn.Module):
 		out = dropout(self.lin2(hidden))
 		return Sigmoid()(out)
 
-def Get_Net(num_node_features, num_edge_features, conv_depth, inner_atom_dim,  dropout_rate):
-	return MyNet(num_node_features, num_edge_features, conv_depth, inner_atom_dim, dropout_rate)
+inner_atom_dim =0
+sup_dropout_rate = 0
+unsup_dropout_rate = 0
+def build_model(device = '', **kwargs):
+	global inner_atom_dim
+	global sup_dropout_dim
+	global unsup_dropout_rate
+	#print(f"kwargs len:{len(kwargs)}")
+	#for k in kwargs:
+	#	print( k)
+	
+	inner_atom_dim =int(kwargs['inner_atom_dim'])
+	sup_dropout_rate= float(kwargs['sup_dropout_rate'])
+	conv_depth = int(kwargs['conv_depth'])
+	unsup_dropout_rate = float(kwargs['unsup_dropout_rate'])
 
+	return MyNet(num_node_features, num_edge_features, conv_depth).to(device)

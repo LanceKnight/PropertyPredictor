@@ -101,6 +101,6 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 		#print(f"u_loss:{u_loss:8.4f} || s_loss:{s_loss:8.4f} || t_loss:{t_loss:8.4f}")
 	else:		
 		t_loss = mean(t_loss_lst)
-		print(f"t_loss:{t_loss:8.4f}")
+		#print(f"t_loss:{t_loss:8.4f}")
 
 

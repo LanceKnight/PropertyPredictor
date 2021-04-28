@@ -17,7 +17,7 @@ from printing import tee_print, set_output_file, print_val_test_auc
 from config_parser import get_config, set_config_file, get_config_dict
 from training import train
 from testing import test
-from network1 import build_model
+from network import build_model
 
 
 config_file = sys.argv[1]

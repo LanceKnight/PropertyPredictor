@@ -79,7 +79,7 @@ for i in range(n):
 
 
 	# load data
-	train_loader, val_loader, test_loader = get_loaders_with_idx(num_extra_data, batch_size, 0)
+	train_loader, val_loader, test_loader = get_loaders_with_idx(num_extra_data, batch_size, fold)
 			
 			
 	is_cuda = torch.cuda.is_available()

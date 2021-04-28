@@ -11,6 +11,7 @@ from statistics import mean
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
+from clearml import Task
 
 from dataset_cv import get_loaders_with_idx, get_stats
 from printing import tee_print, set_output_file, print_val_test_auc
@@ -20,7 +21,8 @@ from testing import test
 from network import build_model
 from param_grid_search import generate_param_sets, get_param_set, get_param_sets_length, record_result, save_file 
 
-
+# set up ClearMl monitoring
+task = Task.init(project_name='side_effect', task_name='clearml_test')
 # load the configuration file
 config_file = sys.argv[1]
 set_config_file(config_file)
@@ -44,6 +46,8 @@ set_output_file(output_file)
 # generate param sets
 model_config_dict = get_config_dict()
 model_config_dict['num_extra_data']=num_extra_data
+task.connect(model_config_dict)
+
 generate_param_sets(model_config_dict)
 
 
@@ -75,7 +79,7 @@ for i in range(n):
 	lr_base =  float(param_set['lr_base'])
 	lr_exp_multiplier =  float(param_set[ 'lr_exp_multiplier'])
 
-	print('======')
+	print('------')
 
 
 	# load data
@@ -151,5 +155,6 @@ for i in range(n):
 	record_result(i, 'val_auc', round(val_sc,4))
 	record_result(i, 'test_auc', round(test_sc,4))
 	
+	print(f"======")
 print_val_test_auc(train_auc_per_epoch, val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)
 save_file()

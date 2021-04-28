@@ -1,0 +1,110 @@
+2021-04-18 15:13:40.755745
+target_col:[0] use_ssl:True
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4784 val_sc:0.4746 test AUC: 0.4766
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5000 val_sc:0.5000 test AUC: 0.5000
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5000 val_sc:0.5000 test AUC: 0.5000
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4719 val_sc:0.4746 test AUC: 0.4764
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5000 val_sc:0.5000 test AUC: 0.5000
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5000 val_sc:0.5000 test AUC: 0.5000
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5000 val_sc:0.5000 test AUC: 0.5000
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5000 val_sc:0.5000 test AUC: 0.5000
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4819 val_sc:0.4746 test AUC: 0.4835
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4753 val_sc:0.4746 test AUC: 0.4762
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5000 val_sc:0.5000 test AUC: 0.5000
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5000 val_sc:0.5000 test AUC: 0.5000
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5322 val_sc:0.5198 test AUC: 0.5445
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.6143 val_sc:0.5541 test AUC: 0.5693
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4290 val_sc:0.4806 test AUC: 0.5559
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4495 val_sc:0.4667 test AUC: 0.5549
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5560 val_sc:0.5522 test AUC: 0.4880
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4762 val_sc:0.4758 test AUC: 0.5492
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4673 val_sc:0.4824 test AUC: 0.5079
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5131 val_sc:0.5023 test AUC: 0.5266
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4723 val_sc:0.4970 test AUC: 0.5653
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5835 val_sc:0.5664 test AUC: 0.4565
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5723 val_sc:0.6089 test AUC: 0.5071
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5586 val_sc:0.5456 test AUC: 0.4312
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5893 val_sc:0.5444 test AUC: 0.5146
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.6444 val_sc:0.6564 test AUC: 0.6485
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4390 val_sc:0.4362 test AUC: 0.5315
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5863 val_sc:0.5408 test AUC: 0.5008
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5102 val_sc:0.4780 test AUC: 0.6187
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5597 val_sc:0.5636 test AUC: 0.4715
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5445 val_sc:0.5543 test AUC: 0.5262
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4303 val_sc:0.4100 test AUC: 0.3292
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5606 val_sc:0.5571 test AUC: 0.4961
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5995 val_sc:0.5488 test AUC: 0.4917
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4999 val_sc:0.4695 test AUC: 0.5795
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5325 val_sc:0.4645 test AUC: 0.6027

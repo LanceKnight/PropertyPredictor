@@ -1,0 +1,1 @@
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5597 val_sc:0.5108 test AUC: 0.5372

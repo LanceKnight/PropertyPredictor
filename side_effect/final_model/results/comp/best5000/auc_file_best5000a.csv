@@ -1,0 +1,8 @@
+,train,val,test
+0,train,val,test
+1,lr_init:0.0007,lr_init:0.0007,lr_init:0.0007
+2,lr_base:2.718,lr_base:2.718,lr_base:2.718
+3,lr_exp_multiplier:-0.1,lr_exp_multiplier:-0.1,lr_exp_multiplier:-0.1
+4,1,1,1
+5,0,0,0
+6,0.6434,0.6448,0.5859

@@ -1,0 +1,5 @@
+2021-04-19 21:14:11.617347
+target_col:[0] use_ssl:True
+
+
+col:0, extra_unlabeled:10000, w:1     train_sc:0.6686 val_sc:0.6114 test AUC: 0.6095

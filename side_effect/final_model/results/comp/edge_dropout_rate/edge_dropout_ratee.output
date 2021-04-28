@@ -1,0 +1,29 @@
+2021-04-18 00:37:42.401803
+target_col:[0] use_ssl:True
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4978 val_sc:0.4601 test AUC: 0.4970
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5191 val_sc:0.4883 test AUC: 0.5442
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5602 val_sc:0.5413 test AUC: 0.5479
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4778 val_sc:0.4952 test AUC: 0.5000
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5469 val_sc:0.5006 test AUC: 0.5322
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5033 val_sc:0.4560 test AUC: 0.4986
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5595 val_sc:0.4723 test AUC: 0.5249
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.4512 val_sc:0.4906 test AUC: 0.4484
+
+
+col:0, extra_unlabeled:10000, w:1000     train_sc:0.5046 val_sc:0.4841 test AUC: 0.5134

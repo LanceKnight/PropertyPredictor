@@ -93,12 +93,12 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 			for i in range(len(out_list)): 
 				print(f"{out_list[i][0]}, {y_list[i][0]}") # for making correlation plot
 
-	print(f"---------------------------------------------------------------")
+	#print(f"---------------------------------------------------------------")
 	if use_SSL == True:		
 		u_loss = mean(u_loss_lst)
 		s_loss = mean(s_loss_lst)
 		t_loss = mean(t_loss_lst)
-		print(f"u_loss:{u_loss:8.4f} || s_loss:{s_loss:8.4f} || t_loss:{t_loss:8.4f}")
+		#print(f"u_loss:{u_loss:8.4f} || s_loss:{s_loss:8.4f} || t_loss:{t_loss:8.4f}")
 	else:		
 		t_loss = mean(t_loss_lst)
 		print(f"t_loss:{t_loss:8.4f}")

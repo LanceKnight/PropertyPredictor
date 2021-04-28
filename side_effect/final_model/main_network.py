@@ -12,7 +12,7 @@ import numpy as np
 from tqdm import tqdm
 import pandas as pd
 
-from dataset import get_loaders, get_stats
+from dataset_cv import get_loaders_with_idx, get_stats
 from printing import tee_print, set_output_file, print_val_test_auc
 from config_parser import get_config, set_config_file, get_config_dict
 from training import train
@@ -55,13 +55,13 @@ auc_file_per_epoch = get_config('file', 'auc_file_per_epoch')
 
 model_config_dict = get_config_dict()
 model_config_dict['num_extra_data']=num_extra_data
-print(model_config_dict)
+#print(model_config_dict)
 
 set_output_file(output_file)
 
 tee_print(f"target_col:{target_col} use_ssl:{use_SSL}")
 
-train_loader, val_loader, test_loader = get_loaders(num_extra_data, batch_size)
+train_loader, val_loader, test_loader = get_loaders_with_idx(num_extra_data, batch_size, 0)#get_loaders(num_extra_data, batch_size)
 		
 		
 is_cuda = torch.cuda.is_available()

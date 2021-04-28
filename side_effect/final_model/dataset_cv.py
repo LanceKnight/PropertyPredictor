@@ -1,4 +1,12 @@
-'''running this .py file directly will generate a .cfg file that has all the training, validation, test indices'''
+'''
+
+running this .py file directly will generate a .cfg file that has all the training, validation, test indices
+
+usage: python dataset_cv.py [col]
+
+[col] is the column to split
+
+'''
 
 import torch
 from random import sample
@@ -11,7 +19,7 @@ from configparser import SafeConfigParser
 
 #from printing import tee_print
 import printing
-
+import sys
 
 #SIDER = MoleculeNet(root = "test", name = "SIDER")
 #SIDER = MoleculeNet(root = "home/liuy69/.clearml/venvs-builds/3.6/task_repository/PropertyPredictor.git/data/raw/SIDER", name="SIDER")
@@ -20,7 +28,7 @@ SIDER = MoleculeNet(root = "../../data/raw/SIDER", name = "SIDER")# This is a co
 
 NUM_LABELED = 1427
 
-col = 0 # the column that needs the split
+col = sys.argv[1] # the column that needs the split
 num_folds = 5
 data_split_file = 'data_split_idx.cfg'
 
@@ -46,20 +54,20 @@ def get_loaders_with_idx(num_extra_data, batch_size, fold):
 	val_idx = get_idx(fold, 'validation_idx')
 	test_idx = get_idx('test', 'test')
 
-	print(f"val_idx:{val_idx}")
 
 	ori_train_num = len(ori_train_idx)
 	val_num = len(val_idx)
 	test_num = len(test_idx)
 	train_num = len(train_idx)
 
-	print(f"fold:{fold}, ori_train_num:{ori_train_num}, val_num:{val_num}, test_num:{test_num}, num_extra_data:{len(extra_unlabeled_idx)}, train_num:{train_num}") 
+	#print(f"fold:{fold}, ori_train_num:{ori_train_num}, val_num:{val_num}, test_num:{test_num}, num_extra_data:{len(extra_unlabeled_idx)}, train_num:{train_num}") 
 	#print(f"min_max_train {min(train_idx)}-{max(train_idx)},   min_max_val:{min(val_idx)}-{max(val_idx)},   min_max_test:{min(test_idx)}-{max(test_idx)}")
 
 	train_dataset = Subset(SIDER, train_idx)#SIDER[:ori_train_num] + SIDER[1427:(1427+num_extra_data)]
 	val_dataset = Subset(SIDER, val_idx)#SIDER[val_idx]#SIDER[ori_train_num:ori_train_num+val_num]
 	test_dataset = Subset(SIDER, test_idx)#SIDER[test_idx]#SIDER[1427-test_num:1427]
 
+	print(f"fold:{fold}, ori_train_num {ori_train_num}, val_num:{len(val_dataset)}, test_num:{len(test_dataset)}, num_extra_data:{len(extra_unlabeled_idx)}, train_num:{len(train_dataset)}") 
 
 	train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
 	val_loader = DataLoader(val_dataset, batch_size = val_num, shuffle = True)
@@ -72,7 +80,6 @@ def get_loaders(num_extra_data, batch_size):
 	global val_dataset
 	global test_dataset 
 	global train_num
-	skf = StratifiedKFold(n_splits=5, shuffle=False)
 	
 	all_idx = [x for x in range(NUM_LABELED)]
 	ori_train_idx, test_idx = train_test_split(all_idx, test_size = 0.1)
@@ -84,13 +91,13 @@ def get_loaders(num_extra_data, batch_size):
 	test_num = len(test_idx)
 	train_num = len(train_idx)
 
-	print(f"ori_train_num {ori_train_num}, val_num:{val_num}, test_num:{test_num}, num_extra_data:{len(extra_unlabeled_idx)}, train_num:{train_num}") 
 	#print(f"min_max_train {min(train_idx)}-{max(train_idx)},   min_max_val:{min(val_idx)}-{max(val_idx)},   min_max_test:{min(test_idx)}-{max(test_idx)}")
 
 	train_dataset = Subset(SIDER, train_idx)#SIDER[:ori_train_num] + SIDER[1427:(1427+num_extra_data)]
 	val_dataset = Subset(SIDER, val_idx)#SIDER[val_idx]#SIDER[ori_train_num:ori_train_num+val_num]
 	test_dataset = Subset(SIDER, test_idx)#SIDER[test_idx]#SIDER[1427-test_num:1427]
 
+	print(f"ori_train_num {ori_train_num}, val_num:{len(val_dataset)}, test_num:{len(test_dataset)}, num_extra_data:{len(extra_unlabeled_idx)}, train_num:{len(train_dataset)}") 
 
 	train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
 	val_loader = DataLoader(val_dataset, batch_size = val_num, shuffle = True)
@@ -160,9 +167,11 @@ def get_idx(section, option):
 
 def str2list(input_str):
 	output = input_str.strip('][').split(', ')
+	output = list(map(int, output))
 	return output
 
 
 if __name__ == "__main__":
 	generate_idx(col)
+	print(f"generated indices for column {col}, stored in {data_split_file}")
 	#get_loaders_with_idx(1, 64, 1)

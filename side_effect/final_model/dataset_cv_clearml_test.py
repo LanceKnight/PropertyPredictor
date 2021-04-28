@@ -28,7 +28,6 @@ SIDER = MoleculeNet(root = "/home/liuy69/.clearml/venvs-builds/3.6/task_reposito
 
 NUM_LABELED = 1427
 
-col = sys.argv[1] # the column that needs the split
 num_folds = 5
 data_split_file = 'data_split_idx.cfg'
 
@@ -172,6 +171,8 @@ def str2list(input_str):
 
 
 if __name__ == "__main__":
+
+	col = sys.argv[1] # the column that needs the split
 	generate_idx(col)
 	print(f"generated indices for column {col}, stored in {data_split_file}")
 	#get_loaders_with_idx(1, 64, 1)

@@ -148,9 +148,21 @@ train_auc_per_epoch = ['train']
 val_auc_per_epoch = ['val']
 test_auc_per_epoch = ['test']
 lrs = []
-for lr_init in lr_init_lst:
+
+#for edge_dropout_rate in edge_dropout_rate_lst:
+	#edge_dropout_rate = float(edge_dropout_rate)
+for lr_init in lr_init_lst:	
+	train_auc.append(f"lr_init:{lr_init}")
+	val_auc.append(f"lr_init:{lr_init}")
+	test_auc.append(f"lr_init:{lr_init}")
 	for lr_base in lr_base_lst:
+		train_auc.append(f"lr_base:{lr_base}")
+		val_auc.append(f"lr_base:{lr_base}")
+		test_auc.append(f"lr_base:{lr_base}")
 		for lr_exp_multiplier in lr_exp_multiplier_lst:
+			train_auc.append(f"lr_exp_multiplier:{lr_exp_multiplier}")
+			val_auc.append(f"lr_exp_multiplier:{lr_exp_multiplier}")
+			test_auc.append(f"lr_exp_multiplier:{lr_exp_multiplier}")
 			for ini_scaled_unsupervised_weight in w:
 				tee_print("\n")		
 				train_auc.append(ini_scaled_unsupervised_weight)
@@ -194,7 +206,7 @@ for lr_init in lr_init_lst:
 						train_auc_per_epoch.append(train_sc)
 						val_auc_per_epoch.append(val_sc)
 						test_auc_per_epoch.append(test_sc)
-						if val_sc > previous_val_sc:
+						if val_sc - previous_val_sc <0.0001:
 							patience_count +=1
 							if(patience_count == patience):
 								print(f"consecutive {patience} epochs without validation set improvement. Break early at epoch {epoch}")

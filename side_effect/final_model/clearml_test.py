@@ -5,13 +5,14 @@ from torch.nn import Linear, Tanh, Softmax, Sigmoid, Dropout
 from torch_geometric.nn import MessagePassing, global_add_pool
 from torch_geometric.utils import add_self_loops
 
-import sys
+#import sys
 import math
 from statistics import mean
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
 from clearml import Task
+from argparse import ArgumentParser
 
 from dataset_cv_clearml_test import get_loaders_with_idx, get_stats
 from printing import tee_print, set_output_file, print_val_test_auc
@@ -24,8 +25,13 @@ from param_grid_search import generate_param_sets, get_param_set, get_param_sets
 # set up ClearMl monitoring
 task = Task.init(project_name='side_effect', task_name='clearml_test')
 # load the configuration file
-config_file = sys.argv[1]
+parser = ArgumentParser()
+parser.add_argument('config', help="configration file")
+args = parser.parse_args()
+
+config_file = args.config
 set_config_file(config_file)
+task.connect_configuration(configuration=config_file, name='configuration_file')
 
 # some configurations need to be load before param set
 target_col = get_config('cfg','target_col')

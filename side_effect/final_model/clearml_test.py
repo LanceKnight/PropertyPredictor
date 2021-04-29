@@ -58,13 +58,15 @@ model_config_dict = get_config_dict()
 model_config_dict['num_extra_data']=num_extra_data
 task.connect(model_config_dict)
 
+print(model_config_dict)
+
 generate_param_sets(model_config_dict)
 
 
 num_param_sets = get_param_sets_length()
-print(f"there are {n} param sets")
+print(f"there are {num_param_sets} param sets")
 print(f"======")
-for para_set_id in range(num_param_sets):
+for param_set_id in range(num_param_sets):
 	param_set = get_param_set(param_set_id)
 	print(param_set)
 	col = int(param_set['target_col'])
@@ -166,14 +168,14 @@ for para_set_id in range(num_param_sets):
 		logger.report_scalar(title=f'performance for param set { param_set_id}', series = 'testing', value =test_sc,  iteration = epoch)
 
 	tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{w}     train_sc:{train_sc:.4f} val_sc:{val_sc:.4f} test AUC: {test_sc:.4f}")
-	record_result(i, 'train_auc', train_sc)
-	record_result(i, 'val_auc', val_sc)
-	record_result(i, 'test_auc', test_sc)
+	record_result(param_set_id, 'train_auc', train_sc)
+	record_result(param_set_id, 'val_auc', val_sc)
+	record_result( param_set_id, 'test_auc', test_sc)
 	
 	print(f"======")
-	logger.report_histogram(title = "param set comparison", series = 'training',values=train_sc, iteration = i, xaxis = 'param set', yaxis ='AUC', mode = 'group')
-	logger.report_histogram(title = "param set comparison", series = 'validation', values=val_sc, iteration = i, xaxis = 'param set', yaxis ='AUC', mode = 'group')
-	logger.report_histogram(title = "param set comparison", series = 'testing', values=test_sc, iteration = i, xaxis = 'param set', yaxis ='AUC', mode = 'group')
+	logger.report_histogram(title = "param set comparison", series = 'training',values=train_sc, iteration = param_set_id, xaxis = 'param set', yaxis ='AUC', mode = 'group')
+	logger.report_histogram(title = "param set comparison", series = 'validation', values=val_sc, iteration =  param_set_id, xaxis = 'param set', yaxis ='AUC', mode = 'group')
+	logger.report_histogram(title = "param set comparison", series = 'testing', values=test_sc, iteration =  param_set_id, xaxis = 'param set', yaxis ='AUC', mode = 'group')
 
 print_val_test_auc(train_auc_per_epoch, val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)
 save_file()

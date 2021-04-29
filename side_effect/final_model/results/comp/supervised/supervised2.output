@@ -1,0 +1,19 @@
+2021-04-28 11:54:26.379613
+col:0, extra_unlabeled:0, w:0     train_sc:0.6427 val_sc:0.6044 test AUC: 0.6706
+col:0, extra_unlabeled:0, w:1000     train_sc:0.6599 val_sc:0.6220 test AUC: 0.6712
+col:0, extra_unlabeled:0, w:0     train_sc:0.6413 val_sc:0.6114 test AUC: 0.6901
+col:0, extra_unlabeled:0, w:1000     train_sc:0.6777 val_sc:0.5983 test AUC: 0.6682
+col:0, extra_unlabeled:0, w:0     train_sc:0.6894 val_sc:0.6274 test AUC: 0.6933
+col:0, extra_unlabeled:0, w:1000     train_sc:0.6829 val_sc:0.6039 test AUC: 0.6789
+col:0, extra_unlabeled:0, w:0     train_sc:0.6426 val_sc:0.6091 test AUC: 0.6734
+col:0, extra_unlabeled:0, w:1000     train_sc:0.6445 val_sc:0.6155 test AUC: 0.6779
+col:0, extra_unlabeled:0, w:0     train_sc:0.6825 val_sc:0.6162 test AUC: 0.6805
+col:0, extra_unlabeled:0, w:1000     train_sc:0.6470 val_sc:0.6288 test AUC: 0.6722
+col:0, extra_unlabeled:0, w:0     train_sc:0.6198 val_sc:0.6296 test AUC: 0.6789
+col:0, extra_unlabeled:0, w:1000     train_sc:0.6685 val_sc:0.6301 test AUC: 0.6888
+col:0, extra_unlabeled:0, w:0     train_sc:0.6461 val_sc:0.6152 test AUC: 0.6696
+col:0, extra_unlabeled:0, w:1000     train_sc:0.6804 val_sc:0.6194 test AUC: 0.6785
+col:0, extra_unlabeled:0, w:0     train_sc:0.6224 val_sc:0.6241 test AUC: 0.6862
+col:0, extra_unlabeled:0, w:1000     train_sc:0.6580 val_sc:0.6029 test AUC: 0.6712
+col:0, extra_unlabeled:0, w:0     train_sc:0.6592 val_sc:0.6285 test AUC: 0.7089
+col:0, extra_unlabeled:0, w:1000     train_sc:0.6358 val_sc:0.6388 test AUC: 0.7041

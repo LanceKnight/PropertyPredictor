@@ -17,7 +17,7 @@ def pr_auc(y_true, y_predict):
 	auc_score = auc(recall, precision)	
 	return auc_score
 
-def test(model, data_loader, debug_mode, target_col, device):
+def test(model, data_loader, debug_mode, target_col, device, logger):
 	model.eval()
 
 	auc_lst = []
@@ -39,6 +39,9 @@ def test(model, data_loader, debug_mode, target_col, device):
 		#==========remove NaN
 		out = out[~np.isnan(y)]
 		y = y[~np.isnan(y)]
+
+		#logger.report_matrix("Confusion Matrix", "value", iteration = )
+
 
 		#print(f"data.y.shape:{y}   out.shape:{out})")
 		if ((len(y)!=0)  and (len(set(y))!=1)):

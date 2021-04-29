@@ -41,10 +41,10 @@ logger = task.get_logger()
 target_col = get_config('cfg','target_col')
 use_SSL = bool(int(get_config('unsupervised', 'use_ssl')))
 
-if use_SSL == False:
-	num_extra_data = 0
-else:
-	num_extra_data = int(get_config('unsupervised','num_extra_data'))
+#if use_SSL == False:
+#	num_extra_data = 0
+#else:
+#	num_extra_data = int(get_config('unsupervised','num_extra_data'))
 
 output_file = get_config('file','output_file')
 final_auc_file = get_config('file','auc_file')
@@ -60,8 +60,9 @@ task.connect(model_config_dict)
 
 print(model_config_dict)
 
-generate_param_sets(model_config_dict)
+param_sets = generate_param_sets(model_config_dict)
 
+logger.report_table("param_set", table_plot=param_sets, iteration=0, series = '')
 
 num_param_sets = get_param_sets_length()
 print(f"there are {num_param_sets} param sets")
@@ -173,9 +174,9 @@ for param_set_id in range(num_param_sets):
 	record_result( param_set_id, 'test_auc', test_sc)
 	
 	print(f"======")
-	logger.report_histogram(title = "param set comparison", series = 'training',values=train_sc, iteration = param_set_id, xaxis = 'param set', yaxis ='AUC', mode = 'group')
-	logger.report_histogram(title = "param set comparison", series = 'validation', values=val_sc, iteration =  param_set_id, xaxis = 'param set', yaxis ='AUC', mode = 'group')
-	logger.report_histogram(title = "param set comparison", series = 'testing', values=test_sc, iteration =  param_set_id, xaxis = 'param set', yaxis ='AUC', mode = 'group')
+	logger.report_histogram(title = f"param set comparison - param set {param_set_id}", series = 'training',values=train_sc, iteration = 0, xaxis = 'param set', yaxis ='AUC', mode = 'group')
+	logger.report_histogram(title = f"param set comparison - param set {param_set_id}", series = 'validation', values=val_sc, iteration = 0, xaxis = 'param set', yaxis ='AUC', mode = 'group')
+	logger.report_histogram(title = f"param set comparison - param set {param_set_id}", series = 'testing', values=test_sc, iteration = 0, xaxis = 'param set', yaxis ='AUC', mode = 'group')
 
 print_val_test_auc(train_auc_per_epoch, val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)
 save_file()

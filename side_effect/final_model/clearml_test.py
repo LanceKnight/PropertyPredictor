@@ -55,7 +55,7 @@ set_output_file(output_file)
 
 # generate param sets
 model_config_dict = get_config_dict()
-model_config_dict['num_extra_data']=num_extra_data
+#model_config_dict['num_extra_data']=num_extra_data
 task.connect(model_config_dict)
 
 print(model_config_dict)
@@ -86,7 +86,10 @@ for param_set_id in range(num_param_sets):
 	w =  int(param_set['w'])
 	edge_dropout_rate =  float(param_set['edge_dropout_rate'])
 	rampup_length =  int(param_set['rampup_length'])
-	num_extra_data =  int(param_set['num_extra_data'])
+	if use_SSL == True:
+		num_extra_data =  int(param_set['num_extra_data'])
+	else:
+		num_extra_data = 0
 
 	lr_init =  float(param_set['lr_init'])
 	lr_base =  float(param_set['lr_base'])

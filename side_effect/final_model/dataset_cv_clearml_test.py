@@ -133,7 +133,7 @@ def generate_idx(col):
 	
 	fold_name = 'fold'
 	for i, fold in enumerate(folds):
-		section = fold_name + str(i)
+		section = fold_name + str(i+1)
 		train_idx = list(fold[0])
 		validation_idx = list(fold[1])
 		set_idx(section, 'train_idx', str(train_idx))

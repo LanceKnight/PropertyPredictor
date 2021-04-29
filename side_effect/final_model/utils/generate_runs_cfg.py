@@ -31,7 +31,7 @@ try:
 	os.mkdir(result_folder)
 except Exception as e:
 	print('folder exists')
-suffix = [x for x in range(10)]
+suffix = [x+1 for x in range(10)]
 config_parser = SafeConfigParser()
 for i in range(runs):
 	new_name = sample_name+str(suffix[i])

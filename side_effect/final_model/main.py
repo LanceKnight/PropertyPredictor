@@ -5,13 +5,14 @@ from torch.nn import Linear, Tanh, Softmax, Sigmoid, Dropout
 from torch_geometric.nn import MessagePassing, global_add_pool
 from torch_geometric.utils import add_self_loops
 
-import sys
+#import sys
 import math
 from statistics import mean
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
 from clearml import Task
+from argparse import ArgumentParser
 
 from dataset_cv import get_loaders_with_idx, get_stats
 from printing import tee_print, set_output_file, print_val_test_auc
@@ -21,20 +22,29 @@ from testing import test
 from network import build_model
 from param_grid_search import generate_param_sets, get_param_set, get_param_sets_length, record_result, save_file 
 
-# set up ClearMl monitoring
-task = Task.init(project_name='side_effect', task_name='clearml_test')
+
 # load the configuration file
-config_file = sys.argv[1]
+parser = ArgumentParser()
+parser.add_argument('config', help="configration file")
+args = parser.parse_args()
+
+config_file = args.config
 set_config_file(config_file)
+task_name =get_config('cfg', 'task_name')
+
+# set up ClearMl monitoring
+task = Task.init(project_name='side_effect', task_name=task_name)
+task.connect_configuration(configuration=config_file, name='configuration_file')
+logger = task.get_logger()
 
 # some configurations need to be load before param set
 target_col = get_config('cfg','target_col')
 use_SSL = bool(int(get_config('unsupervised', 'use_ssl')))
 
-if use_SSL == False:
-	num_extra_data = 0
-else:
-	num_extra_data = int(get_config('unsupervised','num_extra_data'))
+#if use_SSL == False:
+#	num_extra_data = 0
+#else:
+#	num_extra_data = int(get_config('unsupervised','num_extra_data'))
 
 output_file = get_config('file','output_file')
 final_auc_file = get_config('file','auc_file')
@@ -45,17 +55,20 @@ set_output_file(output_file)
 
 # generate param sets
 model_config_dict = get_config_dict()
-model_config_dict['num_extra_data']=num_extra_data
+#model_config_dict['num_extra_data']=num_extra_data
 task.connect(model_config_dict)
 
-generate_param_sets(model_config_dict)
+#print(model_config_dict)
 
+param_sets = generate_param_sets(model_config_dict)
 
-n = get_param_sets_length()
-print(f"there are {n} param sets")
+logger.report_table("param_set", table_plot=param_sets, iteration=0, series = '')
+
+num_param_sets = get_param_sets_length()
+print(f"there are {num_param_sets} param sets")
 print(f"======")
-for i in range(n):
-	param_set = get_param_set(i)
+for param_set_id in range(num_param_sets):
+	param_set = get_param_set(param_set_id)
 	print(param_set)
 	col = int(param_set['target_col'])
 	fold = int(param_set['fold'])
@@ -68,12 +81,15 @@ for i in range(n):
 	num_epochs =  int(param_set['num_epochs'])
 	patience =   int(param_set['patience'])
 
-	use_SSL =  bool(param_set['use_ssl'])
+	use_SSL =  bool(int(param_set['use_ssl']))
 	unsup_dropout_rate =  float(param_set['unsup_dropout_rate'])
 	w =  int(param_set['w'])
 	edge_dropout_rate =  float(param_set['edge_dropout_rate'])
 	rampup_length =  int(param_set['rampup_length'])
-	num_extra_data =  int(param_set['num_extra_data'])
+	if use_SSL == True:
+		num_extra_data =  int(param_set['num_extra_data'])
+	else:
+		num_extra_data = 0
 
 	lr_init =  float(param_set['lr_init'])
 	lr_base =  float(param_set['lr_base'])
@@ -126,17 +142,17 @@ for i in range(n):
 
 	for epoch in tqdm(range(num_epochs)):
 		
-		lrs.append(optimizer.param_groups[0]["lr"])
+		lr = optimizer.param_groups[0]["lr"]
 		rampup_val = rampup(epoch)
 		unsupervised_weight = rampup_val * w
 		train(model, train_loader,  col, unsupervised_weight, device, optimizer, use_SSL = use_SSL, debug_mode = False, edge_dropout_rate = edge_dropout_rate)#epoch==(num_epoches-1))
 		scheduler.step()
-		train_sc = round(test(model, train_loader, False, col, device),4)
-		val_sc = round(test(model, val_loader, False, col, device),4)
-		test_sc = round(test(model, test_loader, False, col, device),4)
-		train_auc_per_epoch.append(train_sc)
-		val_auc_per_epoch.append(val_sc)
-		test_auc_per_epoch.append(test_sc)
+		train_sc = round(test(model, train_loader, False, col, device, logger),4)
+		val_sc = round(test(model, val_loader, False, col, device, logger),4)
+		test_sc = round(test(model, test_loader, False, col, device, logger),4)
+		#train_auc_per_epoch.append(train_sc)
+		#val_auc_per_epoch.append(val_sc)
+		#test_auc_per_epoch.append(test_sc)
 		if val_sc - previous_val_sc <0.0001:
 			patience_count +=1
 			if(patience_count == patience):
@@ -149,12 +165,21 @@ for i in range(n):
 			pass
 			#print(f"Epoch:{epoch:03d}, train AUC: {train_sc: .4f}   val AUC: {val_sc: .4f}  test_AUC:{test_sc:.4f}")
 		previous_val_sc = val_sc
-	#print(f"lrs:{lrs}")
+
+		logger.report_scalar(title=f'learning rate for param set {param_set_id}', series = 'learning rate', value =lr,  iteration = epoch)
+		logger.report_scalar(title=f'performance for param set { param_set_id}', series = 'training', value =train_sc,  iteration = epoch)
+		logger.report_scalar(title=f'performance for param set { param_set_id}', series = 'validation', value =val_sc,  iteration = epoch)
+		logger.report_scalar(title=f'performance for param set { param_set_id}', series = 'testing', value =test_sc,  iteration = epoch)
+
 	tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{w}     train_sc:{train_sc:.4f} val_sc:{val_sc:.4f} test AUC: {test_sc:.4f}")
-	record_result(i, 'train_auc', round(train_sc,4))
-	record_result(i, 'val_auc', round(val_sc,4))
-	record_result(i, 'test_auc', round(test_sc,4))
+	record_result(param_set_id, 'train_auc', train_sc)
+	record_result(param_set_id, 'val_auc', val_sc)
+	record_result( param_set_id, 'test_auc', test_sc)
 	
 	print(f"======")
+	logger.report_histogram(title = f"param set comparison - param set {param_set_id}", series = 'training',values=train_sc, iteration = 0, xaxis = 'param set', yaxis ='AUC', mode = 'group')
+	logger.report_histogram(title = f"param set comparison - param set {param_set_id}", series = 'validation', values=val_sc, iteration = 0, xaxis = 'param set', yaxis ='AUC', mode = 'group')
+	logger.report_histogram(title = f"param set comparison - param set {param_set_id}", series = 'testing', values=test_sc, iteration = 0, xaxis = 'param set', yaxis ='AUC', mode = 'group')
+
 print_val_test_auc(train_auc_per_epoch, val_auc_per_epoch, test_auc_per_epoch, auc_file_per_epoch)
 save_file()

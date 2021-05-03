@@ -58,7 +58,7 @@ model_config_dict = get_config_dict()
 #model_config_dict['num_extra_data']=num_extra_data
 task.connect(model_config_dict)
 
-print(model_config_dict)
+#print(model_config_dict)
 
 param_sets = generate_param_sets(model_config_dict)
 

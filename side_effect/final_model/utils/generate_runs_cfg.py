@@ -34,7 +34,7 @@ except Exception as e:
 suffix = [x+1 for x in range(10)]
 config_parser = SafeConfigParser()
 for i in range(runs):
-	new_name = sample_name+str(suffix[i])
+	new_name = sample_name+'-'+str(suffix[i])
 	new_file = output_folder + '/'+new_name + '.cfg'
 	shutil.copyfile(sample_path, new_file)
 	config_parser.read(new_file)

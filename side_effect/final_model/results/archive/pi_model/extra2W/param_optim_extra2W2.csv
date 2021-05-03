@@ -1,0 +1,2 @@
+,target_col,fold,task_name,num_epochs,patience,batch_size,inner_atom_dim,conv_depth,sup_dropout_rate,use_ssl,unsup_dropout_rate,w,edge_dropout_rate,num_extra_data,rampup_length,lr_init,lr_base,lr_exp_multiplier,file_name,output_file,auc_file,auc_file_per_epoch,param_optim_file,train_auc,val_auc,test_auc
+0,0,2,extra2W2,100,50,64,128,2,0.2,1,0.1,0.01,0.1,20000,0,0.0007,1000,-0.01,extra2W2,results/extra2W2.output,results/auc_file_extra2W2.csv,results/test_auc_per_epoch_extra2W2.csv,results/param_optim_extra2W2.csv,0.672,0.6893,0.697

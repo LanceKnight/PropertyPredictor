@@ -14,11 +14,11 @@ import pandas as pd
 from clearml import Task
 from argparse import ArgumentParser
 
-from dataset_cv import get_loaders_with_idx, get_stats
+from dataset_cv import get_loaders_with_idx, get_loaders, get_stats
 from printing import tee_print, set_output_file, print_val_test_auc
 from config_parser import get_config, set_config_file, get_config_dict
-from training import train
-from testing import test
+from training1 import train
+from testing import test, get_loss
 from network import build_model
 from param_grid_search import generate_param_sets, get_param_set, get_param_sets_length, record_result, save_file 
 
@@ -82,8 +82,9 @@ for param_set_id in range(num_param_sets):
 	patience =   int(param_set['patience'])
 
 	use_SSL =  bool(int(param_set['use_ssl']))
+	print(f'use_SSL:{use_SSL}')
 	unsup_dropout_rate =  float(param_set['unsup_dropout_rate'])
-	w =  int(param_set['w'])
+	w =  float(param_set['w'])
 	edge_dropout_rate =  float(param_set['edge_dropout_rate'])
 	rampup_length =  int(param_set['rampup_length'])
 	if use_SSL == True:
@@ -95,11 +96,12 @@ for param_set_id in range(num_param_sets):
 	lr_base =  float(param_set['lr_base'])
 	lr_exp_multiplier =  float(param_set[ 'lr_exp_multiplier'])
 
+
 	print('------')
 
 
 	# load data
-	train_loader, val_loader, test_loader = get_loaders_with_idx(num_extra_data, batch_size, fold)
+	train_loader, val_loader, test_loader = get_loaders(num_extra_data, batch_size)
 			
 			
 	is_cuda = torch.cuda.is_available()
@@ -145,11 +147,11 @@ for param_set_id in range(num_param_sets):
 		lr = optimizer.param_groups[0]["lr"]
 		rampup_val = rampup(epoch)
 		unsupervised_weight = rampup_val * w
-		train(model, train_loader,  col, unsupervised_weight, device, optimizer, use_SSL = use_SSL, debug_mode = False, edge_dropout_rate = edge_dropout_rate)#epoch==(num_epoches-1))
+		train_loss = train(model, train_loader,  col, unsupervised_weight, device,  optimizer, use_SSL = use_SSL, edge_dropout_rate = edge_dropout_rate)
 		scheduler.step()
-		train_sc = round(test(model, train_loader, False, col, device, logger),4)
-		val_sc = round(test(model, val_loader, False, col, device, logger),4)
-		test_sc = round(test(model, test_loader, False, col, device, logger),4)
+		train_sc = round(test(model, train_loader,  col, device),4)
+		val_sc = round(test(model, val_loader, col, device),4)
+		test_sc = round(test(model, test_loader, col, device),4)
 		#train_auc_per_epoch.append(train_sc)
 		#val_auc_per_epoch.append(val_sc)
 		#test_auc_per_epoch.append(test_sc)
@@ -166,10 +168,13 @@ for param_set_id in range(num_param_sets):
 			#print(f"Epoch:{epoch:03d}, train AUC: {train_sc: .4f}   val AUC: {val_sc: .4f}  test_AUC:{test_sc:.4f}")
 		previous_val_sc = val_sc
 
+		logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'train loss', value =train_loss,  iteration = epoch)
+		#logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'validation loss', value =validation_loss,  iteration = epoch)
+	
 		logger.report_scalar(title=f'learning rate for param set {param_set_id}', series = 'learning rate', value =lr,  iteration = epoch)
-		logger.report_scalar(title=f'performance for param set { param_set_id}', series = 'training', value =train_sc,  iteration = epoch)
-		logger.report_scalar(title=f'performance for param set { param_set_id}', series = 'validation', value =val_sc,  iteration = epoch)
-		logger.report_scalar(title=f'performance for param set { param_set_id}', series = 'testing', value =test_sc,  iteration = epoch)
+		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'training', value =train_sc,  iteration = epoch)
+		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'validation', value =val_sc,  iteration = epoch)
+		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'testing', value =test_sc,  iteration = epoch)
 
 	tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{w}     train_sc:{train_sc:.4f} val_sc:{val_sc:.4f} test AUC: {test_sc:.4f}")
 	record_result(param_set_id, 'train_auc', train_sc)

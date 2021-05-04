@@ -73,7 +73,6 @@ class Sider(InMemoryDataset):
 					continue
 				
 				
-				
 				x, edge_attr, edge_index = smiles2graph(smiles, molecular_attributes= True)
 				# Sort indices.
 				#if edge_index.numel() > 0:
@@ -87,7 +86,7 @@ class Sider(InMemoryDataset):
 				#for att in edge_attr:
 				#	print(att)
 
-				data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y, smiles=smiles)
+				data = Data(x=torch.tensor(x), edge_index=torch.tensor(edge_index), edge_attr=torch.tensor(edge_attr), y=torch.tensor(y), smiles=smiles)
 				if self.pre_filter is not None and not self.pre_filter(data):
 					continue
 				
@@ -99,8 +98,8 @@ class Sider(InMemoryDataset):
 			torch.save(self.collate(data_list), self.processed_paths[0])
 
 
-SIDER = MoleculeNet(root = "data", name = "SIDER")
-#SIDER = Sider(root = "data/sider")
+#SIDER = MoleculeNet(root = "data", name = "SIDER")
+SIDER = Sider(root = "data/sider")
 
 #SIDER = MoleculeNet(root = "/home/liuy69/.clearml/venvs-builds/3.6/task_repository/PropertyPredictor.git/side_effect/final_model/data", name = "SIDER")# This is a combined dataset, the first 1427 samples are labeld from SIDER. Then 8597 sampes from ToxCast (19 of them were discarded due to the failure to convert to mol), 7831 samples were from Tox21. The total number of samples are 1427+8597+7831-19 = 17836
 
@@ -110,6 +109,9 @@ num_folds = 5
 data_split_file = 'data_split_idx.cfg'
 
 print(f"num of data:{len(SIDER)}, {NUM_LABELED} of them are labeled")
+#print("sample data:")
+#s = SIDER[0]
+#print(f"smi:{s.smiles}\nx:\n{s.x}\n edge_index:\n{s.edge_index}\n edge_attr:{s.edge_attr}")
 
 num_samples = len(SIDER)
 

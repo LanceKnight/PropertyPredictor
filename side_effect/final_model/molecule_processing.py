@@ -21,12 +21,26 @@ def batch2attributes(smiles_batch, molecular_attributes=False):
 		edge_attr += smi_edge_attr
 	return torch.tensor(x), torch.tensor(edge_attr)
 
-def smiles2attributes(smiles, molecular_attributes=False):
-	mol = MolFromSmiles(smiles)
 
+
+def smiles2graph(smiles, molecular_attributes=False):
+	mol = MolFromSmiles(smiles)
 	x = mol2x(mol, molecular_attributes)	
 	edge_attr = mol2edge_attr(mol)
-	return x, edge_attr
+
+	edge_indices = []
+	for bond in mol.GetBonds():
+		i = bond.GetBeginAtomIdx()
+		j = bond.GetEndAtomIdx()
+			
+		edge_indices += [[i, j], [j, i]]
+
+	edge_index = torch.tensor(edge_indices)
+	edge_index = edge_index.t().to(torch.long).view(2, -1)
+
+	return x, edge_attr, edge_index
+
+
 
 def mol2x(rdmol, molecular_attributes):
 

@@ -17,9 +17,9 @@ from argparse import ArgumentParser
 from dataset_cv import get_loaders_with_idx, get_loaders, get_stats
 from printing import tee_print, set_output_file, print_val_test_auc
 from config_parser import get_config, set_config_file, get_config_dict
-from training1 import train
-from testing import test, get_loss
-from network import build_model
+from training2 import train
+from testing2 import test#, get_loss
+from network2 import build_model
 from param_grid_search import generate_param_sets, get_param_set, get_param_sets_length, record_result, save_file 
 
 

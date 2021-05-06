@@ -2,10 +2,9 @@ import torch
 from torch_geometric.utils import dropout_adj
 
 from statistics import mean
-
-
-
 from molecule_processing import batch2attributes
+
+
 
 def BCELoss_no_NaN(out, target):
 	#print(f"out.shape:{out.shape}             target.shape:{target.shape}")
@@ -28,8 +27,8 @@ def get_unsupervised_loss(method=None, **kwargs):
 		#edge_index3, edge_attr3 =  dropout_adj(data.edge_index, data.edge_attr, p = edge_dropout_rate)
 		#print(f"edge_index:{edge_index2.shape} edge_attr:{edge_attr2.shape}")
 		#print(f"edge_index:{edge_index3.shape} edge_attr:{edge_attr3.shape}")
-		out2 = model(data.x.float(), edge_index2, edge_attr2, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
-		out2 = out2.view(len(data.y[:,target_col]))
+		out2,z = model(data.x.float(), edge_index2, edge_attr2, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
+		out2,z = out2.view(len(data.y[:,target_col]))
 
 		out3 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
 		out3 = out3.view(len(data.y[:,target_col]))
@@ -55,10 +54,11 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 		data.edge_attr = edge_attr
 		data.to(device)
 	
+		print(f"x:\n{data.x}\n edge_index:\n{data.edge_index}\n edge_attr:{data.edge_attr}")
 
 		#print(f"data.x:{data.x.shape}")
 		#print(f"data.edge_attr:{data.edge_attr.shape}")
-		out = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
+		out,z = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
 		out = out.view(len(data.y[:,target_col]))
 
 		#print(f"out.shape:{out.shape},           y.shape{data.y[:, target_col].shape}")
@@ -102,5 +102,4 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 	else:		
 		t_loss = mean(t_loss_lst)
 		#print(f"t_loss:{t_loss:8.4f}")
-
-
+	return t_loss

@@ -33,16 +33,27 @@ from molecule_processing import smiles2graph
 
 
 class Sider(InMemoryDataset):
-	def __init__(self, root, transform=None, pre_transform=None, pre_filter=None):
+	names = {
+		'sider':'ori_sider',
+		'sider_toxcast':'sider_toxcast',
+		'sider_toxcast_tox21':'sider_toxcast_tox21',
+		'sider_toxcast_tox21_pcba':'sider_toxcast_tox21_pbca',
+		'sider_pcba':'sider_pbca'
+	}
+
+	def __init__(self, root, name, transform=None, pre_transform=None, pre_filter=None):
 		super(Sider, self).__init__(root, transform, pre_transform, pre_filter=None)
+		self.name = name.lower()
+		print("heresdsdfs")
+		assert self.name in self.names.keys()
 		self.data, self.slices = torch.load(self.processed_paths[0])
 	@property
 	def raw_file_names(self):
-		return 'sider.csv'
+		return 'sider.csv'#f'{self.names[self.name]}.csv'
 
 	@property
 	def processed_file_names(self):
-		return 'data.pt'
+		return f'data.pt'
 	
 	@property
 	def raw_dir(self):
@@ -98,8 +109,8 @@ class Sider(InMemoryDataset):
 			torch.save(self.collate(data_list), self.processed_paths[0])
 
 
-#SIDER = MoleculeNet(root = "data", name = "SIDER")
-SIDER = Sider(root = "data/sider")
+SIDER = MoleculeNet(root = "data", name = "SIDER")
+#SIDER = Sider(root = "data/sider", name = 'sider_pcba')
 
 #SIDER = MoleculeNet(root = "/home/liuy69/.clearml/venvs-builds/3.6/task_repository/PropertyPredictor.git/side_effect/final_model/data", name = "SIDER")# This is a combined dataset, the first 1427 samples are labeld from SIDER. Then 8597 sampes from ToxCast (19 of them were discarded due to the failure to convert to mol), 7831 samples were from Tox21. The total number of samples are 1427+8597+7831-19 = 17836
 

@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Linear, Tanh, Softmax, Sigmoid, Dropout
+from torch.nn import Linear, Tanh, Softmax, Sigmoid, Dropout, ReLU
 from torch_geometric.nn import MessagePassing, global_add_pool
 from torch_geometric.utils import add_self_loops
 
@@ -41,27 +41,31 @@ class MyNet(torch.nn.Module):
 		super(MyNet, self).__init__()
 		self.atom_bond_conv = AtomBondConv(num_node_features, num_edge_features)
 		self.W_out = Linear(num_node_features, inner_atom_dim)
-		self.lin1 = Linear(inner_atom_dim, 50)
-		self.lin2 = Linear(50, 1)
+		self.predict_lin1 = Linear(inner_atom_dim, 50)
+		self.predict_lin2 = Linear(50, 1)
+		self.project_head_lin1 = Linear(inner_atom_dim, 128)
+		self.project_head_lin2 = Linear(128, 1)
 		self.depth = depth
-		self.unsup_dropout = torch.nn.Dropout(unsup_dropout_rate)
-		self.sup_dropout = torch.nn.Dropout(sup_dropout_rate)
 	def forward(self, x, edge_index, edge_attr, smiles, batch, is_supervised):
-		if is_supervised:
-			dropout = self.sup_dropout
-		else:
-			dropout = self.unsup_dropout
-		molecule_fp_lst = []
-		for i in range(0, self.depth+1):
+		#molecule_fp_lst = []
+
+		atom_fp = Softmax(dim=1)(self.W_out(x))	
+		molecule_fp = global_add_pool(atom_fp, batch)
+		#molecule_fp_lst.append(molecule_fp)
+		for i in range(0, self.depth):
 			atom_fp = Softmax(dim=1)(self.W_out(x))	
 			molecule_fp = global_add_pool(atom_fp, batch)
-			molecule_fp_lst.append(molecule_fp)
+			#molecule_fp_lst.append(molecule_fp)
 			x = self.atom_bond_conv(x, edge_index, edge_attr, smiles, batch, is_supervised)
 
-		overall_molecule_fp	= torch.stack(molecule_fp_lst, dim=0).sum(dim=0)	
-		hidden = dropout(self.lin1(overall_molecule_fp))
-		out = dropout(self.lin2(hidden))
-		return Sigmoid()(out)
+		z = self.project_head_lin2(ReLU()(self.project_head_lin1(molecule_fp)))
+		
+		#overall_molecule_fp	= torch.stack(molecule_fp_lst, dim=0).sum(dim=0)	
+
+		#adaptation layer
+		hidden = self.predict_lin1(molecule_fp)
+		out = self.predict_lin2(hidden)
+		return Sigmoid()(out), z 
 
 inner_atom_dim =0
 sup_dropout_rate = 0

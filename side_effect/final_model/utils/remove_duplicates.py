@@ -1,10 +1,16 @@
+'''
+useage: pass in a command line argument for the file
+'''
 import pandas as pd
 import rdkit.Chem as Chem
 from tqdm import tqdm
 from rdkit import RDLogger
+import sys
+
 RDLogger.DisableLog('rdApp.*')
 
-df = pd.read_csv('../../../data/raw/SIDER/sider/raw/syn_SIDER_toxcast_tox21.csv')
+file = sys.argv[1]
+df = pd.read_csv(file)
 SMILES = df['smiles']
 #print(f"num of data:{SMILES}")
 

@@ -55,4 +55,4 @@ df['val_auc_sd'] = val_auc_sd
 df['test_auc'] = test_auc
 df['test_auc_sd'] = test_auc_sd
 
-df.to_csv(f"param_optim/{folder_name}.csv")
+df.to_csv(f"param_optim/mean-{folder_name}.csv")

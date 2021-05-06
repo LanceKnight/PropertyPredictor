@@ -1,5 +1,2 @@
-2021-05-02 20:55:31.260736
-col:0, extra_unlabeled:0, w:90     train_sc:0.5051 val_sc:0.4197 test AUC: 0.4722
-col:0, extra_unlabeled:0, w:10     train_sc:0.4649 val_sc:0.4189 test AUC: 0.4740
-col:0, extra_unlabeled:0, w:90     train_sc:0.5598 val_sc:0.5924 test AUC: 0.5821
-col:0, extra_unlabeled:0, w:10     train_sc:0.4725 val_sc:0.4952 test AUC: 0.4925
+2021-05-04 20:56:34.400562
+col:0, extra_unlabeled:5000, w:0.1     train_sc:0.7416 val_sc:0.6892 test AUC: 0.5679

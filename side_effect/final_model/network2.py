@@ -29,7 +29,7 @@ class AtomBondConv(MessagePassing):
 
 	def message(self, x, x_j, edge_attr):
 		print(f'x:{x.shape}, edge_attr:{edge_attr.shape}')
-		print(f'x:\n{x},\n edge_attr\n:{edge_attr}')
+		#print(f'x:\n{x},\n edge_attr\n:{edge_attr}')
 		zero_tensor = torch.zeros(x.shape[0], edge_attr.shape[1], device = x_j.device) #create zero_tensor to pad the sec_col
 		sec_col = torch.cat((edge_attr, zero_tensor), dim = 0) # create the second column. The first column has x_j, which is of shape (num_edge + num_node, num_node_feature), the second column has shape of (num_edge, edge_attr), padded with zero_tensor
 		neighbor_atom_bond_feature = torch.cat((x_j, sec_col), dim = 1)
@@ -54,11 +54,17 @@ class MyNet(torch.nn.Module):
 		else:
 			dropout = self.unsup_dropout
 		molecule_fp_lst = []
-		for i in range(0, self.depth+1):
-			atom_fp = Softmax(dim=1)(self.W_out(x))	
-			molecule_fp = global_add_pool(atom_fp, batch)
-			molecule_fp_lst.append(molecule_fp)
-			x = self.atom_bond_conv(x, edge_index, edge_attr, smiles, batch, is_supervised)
+
+		atom_fp = Softmax(dim=1)(self.W_out(x))	
+		molecule_fp = global_add_pool(atom_fp, batch)
+		molecule_fp_lst.append(molecule_fp)
+		print(f"smi:{smiles}, x:{x.shape}, edge_attr:{edge_attr.shape}")
+		if edge_attr.shape[0] !=0:
+			for i in range(0, self.depth):
+				x = self.atom_bond_conv(x, edge_index, edge_attr, smiles, batch, is_supervised)
+				atom_fp = Softmax(dim=1)(self.W_out(x))	
+				molecule_fp = global_add_pool(atom_fp, batch)
+				molecule_fp_lst.append(molecule_fp)
 
 		overall_molecule_fp	= torch.stack(molecule_fp_lst, dim=0).sum(dim=0)	
 		hidden = dropout(self.lin1(overall_molecule_fp))

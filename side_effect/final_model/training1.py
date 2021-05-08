@@ -56,9 +56,9 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 	for i,  data in enumerate(data_loader):
 
 		# ===replace column y
-		#x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
-		#data.x = x
-		#data.edge_attr = edge_attr
+		x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
+		data.x = x
+		data.edge_attr = edge_attr
 		data.y = data.y[:,target_col]
 		data.to(device)
 	

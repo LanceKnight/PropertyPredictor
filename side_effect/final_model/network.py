@@ -47,16 +47,18 @@ class MyNet(torch.nn.Module):
 		self.project_head_lin2 = Linear(128, 1)
 		self.depth = depth
 	def forward(self, x, edge_index, edge_attr, smiles, batch, is_supervised):
-		#molecule_fp_lst = []
+		molecule_fp_lst = []
 
+		#print(f"smi:{smiles}, x:{x.shape}, edge_attr:{edge_attr.shape}")
 		atom_fp = Softmax(dim=1)(self.W_out(x))	
 		molecule_fp = global_add_pool(atom_fp, batch)
-		#molecule_fp_lst.append(molecule_fp)
-		for i in range(0, self.depth):
-			atom_fp = Softmax(dim=1)(self.W_out(x))	
-			molecule_fp = global_add_pool(atom_fp, batch)
-			#molecule_fp_lst.append(molecule_fp)
-			x = self.atom_bond_conv(x, edge_index, edge_attr, smiles, batch, is_supervised)
+		molecule_fp_lst.append(molecule_fp)
+		if (edge_attr.shape[0] !=0):
+			for i in range(0, self.depth):
+				x = self.atom_bond_conv(x, edge_index, edge_attr, smiles, batch, is_supervised)
+				atom_fp = Softmax(dim=1)(self.W_out(x))	
+				molecule_fp = global_add_pool(atom_fp, batch)
+				molecule_fp_lst.append(molecule_fp)
 
 		z = self.project_head_lin2(ReLU()(self.project_head_lin1(molecule_fp)))
 		

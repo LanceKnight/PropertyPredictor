@@ -1,0 +1,12 @@
+v1.0.0
+a working version as a starting point:
+features:
+1. data are preprocessed
+2. SimCLR model. However, the projection head is still a scalar
+
+to-do:
+1. change projection head to a vector and implement infoNCE
+2. make dataset_cv.py accept different dataset names 
+3. add loss-epoch plot
+4. feature extension to more elements
+

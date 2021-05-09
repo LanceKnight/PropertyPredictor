@@ -108,8 +108,8 @@ class Sider(InMemoryDataset):
 			torch.save(self.collate(data_list), self.processed_paths[0])
 
 
-#SIDER = MoleculeNet(root = "data", name = "SIDER")
-SIDER = Sider(root = "data/sider", name = 'sider_pcba')
+#SIDER = MoleculeNet(root = "data/SIDER", name = "SIDER")
+SIDER = Sider(root = "data/SIDER/sider", name = 'sider_pcba')
 
 #SIDER = MoleculeNet(root = "/home/liuy69/.clearml/venvs-builds/3.6/task_repository/PropertyPredictor.git/side_effect/final_model/data", name = "SIDER")# This is a combined dataset, the first 1427 samples are labeld from SIDER. Then 8597 sampes from ToxCast (19 of them were discarded due to the failure to convert to mol), 7831 samples were from Tox21. The total number of samples are 1427+8597+7831-19 = 17836
 

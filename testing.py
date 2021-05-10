@@ -15,6 +15,7 @@ def roc_auc_score_one_class_compatible(y_true, y_predict):
 	except:
 		print(f"error in running roc_auc_score(y_true, y_predict)   y_true:\n{y_true}, y_predict:\n{y_predict} sc:{sc}")
 	return sc 
+
 def pr_auc(y_true, y_predict):
 	precision, recall, _ = precision_recall_curve(y_true, y_predict)
 	auc_score = auc(recall, precision)	
@@ -26,9 +27,6 @@ def test(model, data_loader,  target_col, device):
 	auc_lst = []
 	loss_lst = []
 	for data in data_loader:
-		x, edge_attr = batch2attributes(data.smiles, molecular_attributes= True)
-		data.x = x
-		data.edge_attr = edge_attr
 		data.to(device)	
 
 		out, z = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, is_supervised = True) # use our own x and edge_attr instead of data.x and data.edge_attr
@@ -36,10 +34,8 @@ def test(model, data_loader,  target_col, device):
 		#==========convert to numpy array
 		out = out.view(len(out))	
 		out = out.cpu().detach().numpy()
-		#print(f"out:{out}")
 		y = data.y[:,target_col]
 		y = y.view(len(y)).cpu().detach().numpy()
-		#print(f"y:{y}")
 		#==========remove NaN
 		out = out[~np.isnan(y)]
 		y = y[~np.isnan(y)]

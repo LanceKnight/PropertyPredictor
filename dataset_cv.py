@@ -17,10 +17,13 @@ from torch_geometric.data import DataLoader, InMemoryDataset, Data
 from sklearn.model_selection import StratifiedKFold
 from configparser import SafeConfigParser
 from tqdm import tqdm
+import numpy as np
 try: 
 	from rdkit import Chem
+	from rdkit import DataStructs
 except ImportError:
 	Chem = None
+	DataStructs = None
 
 #from printing import tee_print
 import printing
@@ -40,6 +43,7 @@ class Sider(InMemoryDataset):
 		'sider_toxcast_tox21_pcba':'sider_toxcast_tox21_pbca',
 		'sider_pcba':'sider_pbca'
 	}
+	similarity_matrix = None
 
 	def __init__(self, root, name, transform=None, pre_transform=None, pre_filter=None):
 		super(Sider, self).__init__(root, transform, pre_transform, pre_filter=None)
@@ -48,8 +52,7 @@ class Sider(InMemoryDataset):
 		self.data, self.slices = torch.load(self.processed_paths[0])
 	@property
 	def raw_file_names(self):
-		return 'sider.csv'#f'{self.names[self.name]}.csv'
-
+		return 'sider.csv'#f'{self.names[self.name]}.csv'#
 	@property
 	def processed_file_names(self):
 		return f'data.pt'
@@ -63,11 +66,13 @@ class Sider(InMemoryDataset):
 		return osp.join(self.root, 'processed')
 
 	def process(self):
+		fp_lst = []
 		with open(self.raw_paths[0], 'r') as f:
 			dataset = f.read().split('\n')[1:-1]
 			dataset = [x for x in dataset if len(x) > 0]  # Filter empty lines.
+			self.similarity_matrix = np.zeros((len(dataset), len(dataset)))
 			data_list = []
-			for line in tqdm(dataset):
+			for i, line in enumerate(tqdm(dataset)):
 				line = re.sub(r'\".*\"', '', line)  # Replace ".*" strings.
 				line = line.split(',')
 				
@@ -105,7 +110,14 @@ class Sider(InMemoryDataset):
 				
 				data_list.append(data)
 				
+				fp = Chem.RDKFingerprint(mol)
+				fp_lst.append(fp)
+				for j, past_fp in enumerate(fp_lst[:-1]):
+					similarity = DataStructs.FingerprintSimilarity(fp, past_fp)
+					self.similarity_matrix[i][j] = self.similarity_matrix[j][i]= similarity
+					print(f"smi_sc:{similarity}")
 			torch.save(self.collate(data_list), self.processed_paths[0])
+		print(self.similarity_matrix)	
 
 
 #SIDER = MoleculeNet(root = "data/SIDER", name = "SIDER")
@@ -113,7 +125,7 @@ SIDER = Sider(root = "data/SIDER/sider", name = 'sider_pcba')
 
 #SIDER = MoleculeNet(root = "/home/liuy69/.clearml/venvs-builds/3.6/task_repository/PropertyPredictor.git/side_effect/final_model/data", name = "SIDER")# This is a combined dataset, the first 1427 samples are labeld from SIDER. Then 8597 sampes from ToxCast (19 of them were discarded due to the failure to convert to mol), 7831 samples were from Tox21. The total number of samples are 1427+8597+7831-19 = 17836
 
-NUM_LABELED = 1427
+NUM_LABELED = 4#1427
 
 num_folds = 5
 data_split_file = 'data_split_idx.cfg'
@@ -129,6 +141,9 @@ train_dataset =[]
 val_dataset = []
 test_dataset =[]
 train_num = 0
+
+	
+
 
 def get_loaders_with_idx(num_extra_data, batch_size, fold, sample_seed = None, torch_seed = None):
 	global train_dataset

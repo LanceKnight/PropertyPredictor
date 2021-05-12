@@ -43,19 +43,19 @@ class Sider(InMemoryDataset):
 		'sider_toxcast_tox21_pcba':'sider_toxcast_tox21_pbca',
 		'sider_pcba':'sider_pbca'
 	}
-	similarity_matrix = None
 
 	def __init__(self, root, name, transform=None, pre_transform=None, pre_filter=None):
 		super(Sider, self).__init__(root, transform, pre_transform, pre_filter=None)
 		self.name = name.lower()
 		assert self.name in self.names.keys()
 		self.data, self.slices = torch.load(self.processed_paths[0])
+		self.similarity_matrix = torch.load(self.processed_paths[1])		
 	@property
 	def raw_file_names(self):
 		return 'sider.csv'#f'{self.names[self.name]}.csv'#
 	@property
 	def processed_file_names(self):
-		return f'data.pt'
+		return ['data.pt', 'similarity.pt']
 	
 	@property
 	def raw_dir(self):
@@ -101,7 +101,7 @@ class Sider(InMemoryDataset):
 				#for att in edge_attr:
 				#	print(att)
 
-				data = Data(x=torch.tensor(x), edge_index=torch.tensor(edge_index), edge_attr=torch.tensor(edge_attr), y=torch.tensor(y), smiles=smiles)
+				data = Data(x=torch.tensor(x), edge_index=torch.tensor(edge_index), edge_attr=torch.tensor(edge_attr), y=torch.tensor(y), smiles=smiles, id = i)
 				if self.pre_filter is not None and not self.pre_filter(data):
 					continue
 				
@@ -115,17 +115,18 @@ class Sider(InMemoryDataset):
 				for j, past_fp in enumerate(fp_lst[:-1]):
 					similarity = DataStructs.FingerprintSimilarity(fp, past_fp)
 					self.similarity_matrix[i][j] = self.similarity_matrix[j][i]= similarity
-					print(f"smi_sc:{similarity}")
+					#print(f"smi_sc:{similarity}")
 			torch.save(self.collate(data_list), self.processed_paths[0])
-		print(self.similarity_matrix)	
+			torch.save(self.similarity_matrix, self.processed_paths[1])
+		#print(self.similarity_matrix)	
 
 
 #SIDER = MoleculeNet(root = "data/SIDER", name = "SIDER")
 SIDER = Sider(root = "data/SIDER/sider", name = 'sider_pcba')
-
+#print(SIDER.similarity_matrix)
 #SIDER = MoleculeNet(root = "/home/liuy69/.clearml/venvs-builds/3.6/task_repository/PropertyPredictor.git/side_effect/final_model/data", name = "SIDER")# This is a combined dataset, the first 1427 samples are labeld from SIDER. Then 8597 sampes from ToxCast (19 of them were discarded due to the failure to convert to mol), 7831 samples were from Tox21. The total number of samples are 1427+8597+7831-19 = 17836
 
-NUM_LABELED = 4#1427
+NUM_LABELED = 1427
 
 num_folds = 5
 data_split_file = 'data_split_idx.cfg'

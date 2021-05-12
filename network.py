@@ -44,7 +44,7 @@ class MyNet(torch.nn.Module):
 		self.predict_lin1 = Linear(inner_atom_dim, 50)
 		self.predict_lin2 = Linear(50, 1)
 		self.project_head_lin1 = Linear(inner_atom_dim, 128)
-		self.project_head_lin2 = Linear(128, 1)
+		self.project_head_lin2 = Linear(128, 128)
 		self.depth = depth
 	def forward(self, x, edge_index, edge_attr, smiles, batch, is_supervised):
 		molecule_fp_lst = []

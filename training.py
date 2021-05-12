@@ -16,12 +16,9 @@ from dataset_cv import SIDER
 
 
 def BCELoss_no_NaN(out, target):
-	#print(f"out.shape:{out.shape}             target.shape:{target.shape}")
-	#target_no_NaN = torch.where(torch.isnan(target), out, target)
 	target_no_NaN = target[~torch.isnan(target)]
 	out = out[~torch.isnan(target)]
-	target_no_NaN = target_no_NaN.detach() 
-	#print(f"target_no_NaN:{target_no_NaN}")
+	target_no_NaN = target_no_NaN#target_no_NaN.detach() 
 	return BCELoss()(out, target_no_NaN)
 
 def get_unsupervised_loss(method=None, **kwargs):
@@ -138,6 +135,29 @@ def get_infoNCE(data, model, n, device):
 	return infoNCE(anchors_z, positives, negatives, device )
 
 
+def get_loss(data, model, num_pos_neg_samples, device, unsupervised_weight):
+		total_loss = 0
+		loss = BCELoss_no_NaN(out, data.y)
+		
+		# === unsupervised learning
+		if (loss.isnan()):
+			pass
+		else:
+			if use_SSL == True:
+				#unsupervised_loss = get_unsupervised_loss(method = 'pi_model', model = model, data = data, target_col = target_col) 
+				unsupervised_loss = get_infoNCE(data, model, 5, device)#get_unsupervised_loss(method = 'pi_model',  model = model, data = data, target_col = target_col, edge_dropout_rate =kwargs['edge_dropout_rate'], device = device) 
+				total_loss = loss + unsupervised_weight * unsupervised_loss
+				#u_loss_lst.append(unsupervised_weight*unsupervised_loss.item())
+				#s_loss_lst.append(loss.item())
+				t_loss_lst.append(total_loss.item())
+				#print(f"u_loss:{unsupervised_weight* unsupervised_loss:8.4f} || s_loss:{loss:8.4f} || t_loss:{total_loss:8.4f} || -- ori_u_loss:{unsupervised_loss:8.4f}  unsupervised_weight:{unsupervised_weight}")
+			else:
+				total_loss = loss.item()
+				
+				#t_loss_lst.append(total_loss.item())
+				#print(f"t_loss:{total_loss}")
+		return total_loss
+	
 
 def train(model, data_loader, target_col, unsupervised_weight, device, optimizer, use_SSL=True,  **kwargs):
 	model.train()
@@ -152,43 +172,43 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 	
 		#print(f"smi:{data.smiles}\nx:\n{data.x}\n edge_index:\n{data.edge_index}\n edge_attr:{data.edge_attr}")
 		# === filter out data that does not have y label (i.e. y label is Nan)
-		#data_lst = data.to_data_list()#~torch.isnan(data.y)]
-		#data_lst = list(compress(data_lst, list(~torch.isnan(data.y).cpu().numpy())))
-
-
-		#if(len(data_lst)!=0): # === if there is labeled data in this batch, then get the supervised loss, otherwise the loss is 0
-
-		#	data = Batch.from_data_list(data_lst).to(device)
-		#	out, z  = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
-		#	out = out.view(len(data.y))
-
-		#	loss = BCELoss()(out, data.y)
-		#else:
-		#	loss = torch.tensor(0)
+#		data_lst = data.to_data_list()#~torch.isnan(data.y)]
+#		data_lst = list(compress(data_lst, list(~torch.isnan(data.y).cpu().numpy())))
+#
+#
+#		if(len(data_lst)!=0): # === if there is labeled data in this batch, then get the supervised loss, otherwise the loss is 0
+#
+#			data = Batch.from_data_list(data_lst).to(device)
+#			out, z  = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
+#			out = out.view(len(data.y))
+#
+#			supervised_loss = BCELoss()(out, data.y)
+#		else:
+#			supervised_loss = torch.tensor(0)
 
 		out, z  = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
 		out = out.view(len(data.y))
-		loss = BCELoss_no_NaN(out, data.y)
+		supervised_loss = BCELoss_no_NaN(out, data.y)
 		
 		# === unsupervised learning
-		if (loss.isnan()):
+		if (supervised_loss.isnan()):
 			pass
-			#print("loss is nan")
-			#print(f"out:\n{out}, data.y[:,target_col]:\n{data.y[:,target_col]} ")
+#			#print("loss is nan")
+#			#print(f"out:\n{out}, data.y[:,target_col]:\n{data.y[:,target_col]} ")
 		else:
 			if use_SSL == True:
 				#unsupervised_loss = get_unsupervised_loss(method = 'pi_model', model = model, data = data, target_col = target_col) 
 				unsupervised_loss = get_infoNCE(data, model, 5, device)#get_unsupervised_loss(method = 'pi_model',  model = model, data = data, target_col = target_col, edge_dropout_rate =kwargs['edge_dropout_rate'], device = device) 
-				total_loss = loss + unsupervised_weight * unsupervised_loss
+				total_loss = supervised_loss + unsupervised_weight * unsupervised_loss
 				u_loss_lst.append(unsupervised_weight*unsupervised_loss.item())
-				s_loss_lst.append(loss.item())
+				s_loss_lst.append(supervised_loss.item())
 				t_loss_lst.append(total_loss.item())
 				#print(f"u_loss:{unsupervised_weight* unsupervised_loss:8.4f} || s_loss:{loss:8.4f} || t_loss:{total_loss:8.4f} || -- ori_u_loss:{unsupervised_loss:8.4f}  unsupervised_weight:{unsupervised_weight}")
 			else:
-				total_loss = loss
+				total_loss = supervised_loss
 				t_loss_lst.append(total_loss.item())
 				#print(f"t_loss:{total_loss}")
-		
+	
 			total_loss.backward()
 			optimizer.step()
 			optimizer.zero_grad()
@@ -197,12 +217,12 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 
 	#print(f"---------------------------------------------------------------")
 	if use_SSL == True:		
-		u_loss = mean(u_loss_lst)
-		s_loss = mean(s_loss_lst)
+		#u_loss = mean(u_loss_lst)
+		#s_loss = mean(s_loss_lst)
 		t_loss = mean(t_loss_lst)
 		#print(f"u_loss:{u_loss:8.4f} || s_loss:{s_loss:8.4f} || t_loss:{t_loss:8.4f}")
 	else:		
 		t_loss = mean(t_loss_lst)
 		#print(f"t_loss:{t_loss:8.4f}")
-
+	
 	return t_loss

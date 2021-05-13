@@ -31,21 +31,30 @@ def get_bottomk(i, n, device):
 	return -matrix, indices
 
 def infoNCE(anchors, positives, negatives, device):
-	A_list = []
-	B_list = []
-	#     print(f"positives_length:{len(positives)}")
-	#     print(f"negative_length:{len(negatives)}")
-	for i in range(anchors.shape[0]):
-		positive = positives[i]
-		#print(f"anchors:{anchors[i].view(1, anchors.shape[1]).shape}, positive:{positive.shape}")
-		A_list.append(torch.mean(CosineSimilarity()(anchors[i].view(1,anchors.shape[1]), positive)))
-		negative = negatives[i]
-		B_list.append(torch.mean(CosineSimilarity()(anchors[i].view(1,anchors.shape[1]), negative)))
+	#print(f"anchors:{anchors.shape}, positives:{positives.shape}, negatives:{negatives.shape}")
 
-	A = torch.mean(torch.stack(A_list))
-	B = torch.mean(torch.stack(B_list))
-	#print(f"A:{A}, B:{B}")
-	loss = -torch.log(torch.exp(A)/torch.exp(A+B))
+	anchors = anchors.view(positives.shape[0],1, positives.shape[2])
+	anchors = anchors.expand(positives.shape)
+	cos = CosineSimilarity(dim = 2)
+	A = torch.mean(cos(anchors, positives))
+	B = torch.mean(cos(anchors, negatives))
+	
+
+#	for i in range(anchors.shape[0]):
+#		positive = positives[i]
+#		#print(f"anchors:{anchors[i].view(1, anchors.shape[1]).shape}, positive:{positive.shape}")
+#		A_list.append(torch.mean(CosineSimilarity()(anchors[i].view(1,anchors.shape[1]), positive)))
+#		negative = negatives[i]
+#		B_list.append(torch.mean(CosineSimilarity()(anchors[i].view(1,anchors.shape[1]), negative)))
+#
+#	A = torch.mean(torch.stack(A_list))
+#	B = torch.mean(torch.stack(B_list))
+	#loss = -torch.log(torch.exp(A)/torch.exp(A+B))
+	A_part = -torch.log(torch.tensor(1/2)*(A+torch.tensor(1)))
+	B_part = -torch.log(torch.tensor(-1/2)*(B+torch.tensor(-1)))
+	print(f"A_part:{A_part} B_part:{B_part}")
+	loss =   A_part + B_part
+	print(f"A:{A}, B:{B}, infoNCE loss:{loss}")
 	return loss
 
 def get_infoNCE(data, model, n, device):
@@ -55,20 +64,21 @@ def get_infoNCE(data, model, n, device):
 	negatives = []
 	_, positive_indices = get_topk(i, n, device)
 	_, negative_indices = get_bottomk(i, n, device)
-	#print(positive_indices)
 	positive_sampler = BatchSampler(torch.flatten(positive_indices).tolist(), n, drop_last = False)
 	positive_dataloader = DataLoader(SIDER,batch_sampler = positive_sampler)
 	for pos_data in positive_dataloader:
 		pos_data.to(device)
 		_, pos_z=  model(pos_data.x.float(),pos_data.edge_index, pos_data.edge_attr, pos_data.smiles, pos_data.batch, False)
 		positives.append(pos_z)
-	  
+	positives = torch.stack(positives) 
+	
 	negative_sampler = BatchSampler(torch.flatten(negative_indices).tolist(), n, drop_last = False)
 	negative_dataloader = DataLoader(SIDER,batch_sampler = negative_sampler)
 	for neg_data in negative_dataloader:
 		neg_data.to(device)
 		_, neg_z = model(neg_data.x.float(),neg_data.edge_index, neg_data.edge_attr, neg_data.smiles, neg_data.batch, False)
 		negatives.append(neg_z)
+	negatives =torch.stack(negatives)
 	#print(f"anchors1:{anchors}")
 	  
 	#negatives = [model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True) for data in dataset[negative_indices]]

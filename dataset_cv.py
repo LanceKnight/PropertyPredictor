@@ -135,6 +135,7 @@ data_split_file = 'data_split_idx.cfg'
 print(f"num of data:{len(SIDER)}, {NUM_LABELED} of them are labeled")
 #print("sample data:")
 #s = SIDER[0]
+#print(s)
 #print(f"smi:{s.smiles}\nx:\n{s.x}\n edge_index:\n{s.edge_index}\n edge_attr:{s.edge_attr}")
 
 num_samples = len(SIDER)
@@ -147,7 +148,7 @@ train_num = 0
 	
 
 
-def get_loaders_with_idx(num_extra_data, batch_size, fold, sample_seed = None, torch_seed = None):
+def get_loaders_with_idx(num_extra_data, batch_size, fold, sample_seed = 1, torch_seed = 1):
 	global train_dataset
 	global val_dataset
 	global test_dataset 

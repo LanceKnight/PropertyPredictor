@@ -13,7 +13,7 @@ from tqdm import tqdm
 import pandas as pd
 from clearml import Task
 from argparse import ArgumentParser
-import termcolor
+from termcolor import cprint
 
 from dataset_cv import get_loaders_with_idx, get_loaders, get_stats
 from printing import tee_print, set_output_file, print_val_test_auc

@@ -145,20 +145,21 @@ for param_set_id in range(num_param_sets):
 	scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
 	previous_val_sc = 999
 	patience_count = 0
+	
+	unsupervised_param = {'edge_dropout_rate': edge_dropout_rate,
+								 'num_pos_neg_samples' : num_pos_neg_samples
+								}
 
 	for epoch in tqdm(range(num_epochs)):
 		
 		lr = optimizer.param_groups[0]["lr"]
 		rampup_val = rampup(epoch)
 		unsupervised_weight = rampup_val * w
-		train_loss = train(method, model, train_loader,  col, unsupervised_weight, device,  optimizer, use_SSL = use_SSL, edge_dropout_rate = edge_dropout_rate, num_pos_neg_samples = num_pos_neg_samples)
+		train_loss = train(method=method, model = model, data_loader = train_loader,  target_col = col, unsupervised_weight = unsupervised_weight, device = device,  optimizer=optimizer, use_SSL = use_SSL, **unsupervised_param)
 		scheduler.step()
-		train_sc = round(test(model, train_loader,  col, device),4)
-		val_sc = round(test(model, val_loader, col, device),4)
-		test_sc = round(test(model, test_loader, col, device),4)
-		#train_auc_per_epoch.append(train_sc)
-		#val_auc_per_epoch.append(val_sc)
-		#test_auc_per_epoch.append(test_sc)
+		train_sc, train_loss2= map(lambda x: round(x,4),test(model= model, data_loader = train_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+		val_sc, val_loss =   map(lambda x: round(x,4),test(model= model, data_loader = val_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+		test_sc, test_loss =   map(lambda x: round(x,4),test(model= model, data_loader = test_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
 		if val_sc - previous_val_sc <0.0001:
 			patience_count +=1
 			if(patience_count == patience):
@@ -173,8 +174,10 @@ for param_set_id in range(num_param_sets):
 		previous_val_sc = val_sc
 
 		logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'train loss', value =train_loss,  iteration = epoch)
-		#logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'validation loss', value =validation_loss,  iteration = epoch)
-	
+		logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'train loss2', value =train_loss2,  iteration = epoch)
+		logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'validation loss', value =val_loss,  iteration = epoch)
+		logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'test loss', value =test_loss,  iteration = epoch)
+
 		logger.report_scalar(title=f'learning rate for param set {param_set_id}', series = 'learning rate', value =lr,  iteration = epoch)
 		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'training', value =train_sc,  iteration = epoch)
 		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'validation', value =val_sc,  iteration = epoch)

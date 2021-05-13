@@ -109,24 +109,23 @@ def get_loss(method=None, data=None, model=None, predicted = None, y = None, dev
 	provide either (data, model) or (predicted, y), and return loss
 	'''
 	mode = 0 # === 1 for (data, model), 2 for (predicted, y)
-	if((data is None) or (model is None)) and ((predicted is None) or (y is None)):
-		print("Error in getting loss: you need to provide either (data, model) or (predicted, y)")
+	if((data is None) or (model is None)):
+		print('Error in getting loss: data and model should always be provided')
 	else:
 		if (predicted is not None) and (y is not None):
 			mode = 2
-		elif (data is not None) and (model is not None):
-			mode = 1
 		else:
-			print('Error in choosing mode in getting loss!')
+			mode = 1
 
-	if(mode ==1):# ===if provided (data, model)
+	if(mode ==1):# ===if provided (data, model) only
 		out, z  = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
-	elif(mode ==2):# ===if provided (predicted, y)
+		y = data.y
+	elif(mode ==2):# ===if provided (predicted, y) as well
 		out, z = predicted
 
 	total_loss = 0
-	out = out.view(len(data.y))
-	supervised_loss = BCELoss_no_NaN(out, data.y)
+	out = out.view(len(y))
+	supervised_loss = BCELoss_no_NaN(out, y)
 	method= method.lower()
 	methods = {'infonce', 'pi-model'}
 	assert method in methods, 'unsupervised method does not exist!' 
@@ -140,7 +139,7 @@ def get_loss(method=None, data=None, model=None, predicted = None, y = None, dev
 	return total_loss
 	
 
-def train(method, model, data_loader, target_col, unsupervised_weight, device, optimizer, use_SSL=True,  **kwargs):
+def train(method =None, model=None, data_loader=None, target_col=None, unsupervised_weight=None, device=None, optimizer=None, use_SSL=True,  **kwargs):
 	model.train()
 	unsupervised_loss_lst = []
 	supervised_loss_lst = []

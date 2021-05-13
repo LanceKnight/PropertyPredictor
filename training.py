@@ -104,22 +104,40 @@ def get_unsupervised_loss(method=None, model = None, data = None, device=None, *
 
 
 
-def get_loss(method=None, data=None, model=None,  device=None, unsupervised_weight=None, use_SSL = True, **kwargs):
-		total_loss = 0
-		out, z  = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
-		out = out.view(len(data.y))
-		supervised_loss = BCELoss_no_NaN(out, data.y)
-		method= method.lower()
-		methods = {'infonce', 'pi-model'}
-		assert method in methods, 'unsupervised method does not exist!' 
-		# === unsupervised learning
-		if use_SSL == True:
-			unsupervised_loss = get_unsupervised_loss(method = method,  model = model, data = data, device = device,**kwargs ) 
-			total_loss = supervised_loss + unsupervised_weight * unsupervised_loss
+def get_loss(method=None, data=None, model=None, predicted = None, y = None, device=None, unsupervised_weight=None, use_SSL = True, **kwargs):
+	'''
+	provide either (data, model) or (predicted, y), and return loss
+	'''
+	mode = 0 # === 1 for (data, model), 2 for (predicted, y)
+	if((data is None) or (model is None)) and ((predicted is None) or (y is None)):
+		print("Error in getting loss: you need to provide either (data, model) or (predicted, y)")
+	else:
+		if (predicted is not None) and (y is not None):
+			mode = 2
+		elif (data is not None) and (model is not None):
+			mode = 1
 		else:
-			total_loss = supervised_loss
-			
-		return total_loss
+			print('Error in choosing mode in getting loss!')
+
+	if(mode ==1):# ===if provided (data, model)
+		out, z  = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
+	elif(mode ==2):# ===if provided (predicted, y)
+		out, z = predicted
+
+	total_loss = 0
+	out = out.view(len(data.y))
+	supervised_loss = BCELoss_no_NaN(out, data.y)
+	method= method.lower()
+	methods = {'infonce', 'pi-model'}
+	assert method in methods, 'unsupervised method does not exist!' 
+	# === unsupervised learning
+	if use_SSL == True:
+		unsupervised_loss = get_unsupervised_loss(method = method,  model = model, data = data, device = device,**kwargs ) 
+		total_loss = supervised_loss + unsupervised_weight * unsupervised_loss
+	else:
+		total_loss = supervised_loss
+		
+	return total_loss
 	
 
 def train(method, model, data_loader, target_col, unsupervised_weight, device, optimizer, use_SSL=True,  **kwargs):

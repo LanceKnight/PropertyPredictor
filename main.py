@@ -13,6 +13,7 @@ from tqdm import tqdm
 import pandas as pd
 from clearml import Task
 from argparse import ArgumentParser
+import termcolor
 
 from dataset_cv import get_loaders_with_idx, get_loaders, get_stats
 from printing import tee_print, set_output_file, print_val_test_auc
@@ -82,11 +83,14 @@ for param_set_id in range(num_param_sets):
 	patience =   int(param_set['patience'])
 
 	use_SSL =  bool(int(param_set['use_ssl']))
-	print(f'use_SSL:{use_SSL}')
+	cprint(f'use_SSL:{use_SSL}', 'red')
+	method = param_set['method']
+	cprint(f'method:{method}', 'red')
+	rampup_length =  int(param_set['rampup_length'])
 	unsup_dropout_rate =  float(param_set['unsup_dropout_rate'])
 	w =  float(param_set['w'])
 	edge_dropout_rate =  float(param_set['edge_dropout_rate'])
-	rampup_length =  int(param_set['rampup_length'])
+	num_pos_neg_samples = int(param_set['num_pos_neg_samples'])
 	if use_SSL == True:
 		num_extra_data =  int(param_set['num_extra_data'])
 	else:
@@ -101,7 +105,7 @@ for param_set_id in range(num_param_sets):
 
 
 	# load data
-	train_loader, val_loader, test_loader = get_loaders(num_extra_data, batch_size)
+	train_loader, val_loader, test_loader = get_loaders_with_idx(num_extra_data, batch_size, 1)
 			
 			
 	is_cuda = torch.cuda.is_available()
@@ -147,7 +151,7 @@ for param_set_id in range(num_param_sets):
 		lr = optimizer.param_groups[0]["lr"]
 		rampup_val = rampup(epoch)
 		unsupervised_weight = rampup_val * w
-		train_loss = train(model, train_loader,  col, unsupervised_weight, device,  optimizer, use_SSL = use_SSL, edge_dropout_rate = edge_dropout_rate)
+		train_loss = train(method, model, train_loader,  col, unsupervised_weight, device,  optimizer, use_SSL = use_SSL, edge_dropout_rate = edge_dropout_rate, num_pos_neg_samples = num_pos_neg_samples)
 		scheduler.step()
 		train_sc = round(test(model, train_loader,  col, device),4)
 		val_sc = round(test(model, val_loader, col, device),4)

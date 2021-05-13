@@ -21,65 +21,6 @@ def BCELoss_no_NaN(out, target):
 	target_no_NaN = target_no_NaN#target_no_NaN.detach() 
 	return BCELoss()(out, target_no_NaN)
 
-def get_unsupervised_loss(method=None, **kwargs):
-	loss = torch.tensor([0], device = kwargs['device'])
-	if method == 'pi_model':
-		model = kwargs['model']
-		data = kwargs['data']
-		edge_dropout_rate = kwargs['edge_dropout_rate']
-		target_col = kwargs['target_col']
-		try:
-			#print("hereaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-			edge_index2, edge_attr2 =  dropout_adj(data.edge_index, data.edge_attr, p = edge_dropout_rate)
-
-			out2, z2 = model(data.x.float(), edge_index2, edge_attr2, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
-			out2 = out2.view(len(data.y))
-
-			out3, z3 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
-			out3 = out3.view(len(data.y))
-			loss = torch.nn.MSELoss()(z2, z3)
-		except Exception as e:
-			print(f"exception:{e}")
-			print(f"smi:{data.smiles} edge_index:{data.edge_index.shape} edge_attr:{data.edge_attr.shape}, p = {edge_dropout_rate}")
-		#edge_index3, edge_attr3 =  dropout_adj(data.edge_index, data.edge_attr, p = edge_dropout_rate)
-		#print(f"edge_index:{edge_index2.shape} edge_attr:{edge_attr2.shape}")
-		#print(f"edge_index:{edge_index3.shape} edge_attr:{edge_attr3.shape}")
-	elif method == 'edge_dropout':
-		pass	
-	else:
-		print('cannot get unsupervised loss!')
-
-	return loss
-
-#def get_topk(i,n):
-#	matrix, indices = topk(SIDER.similarity_matrix[i], n)
-#	return matrix, indices
-#
-#def get_bottomk(i, n):
-#	matrix, indices = topk(-SIDER.similarity_matrix[i], n)
-#	return -matrix, indices
-#
-#def infoNCE(anchor, positives, negatives):
-#	A = torch.tensor(anchor.size)
-#	B = torch.tensor(anchor.size)
-#	for positive in positives:
-#		A = A+CosineSimilarity()(anchor, positive)
-#	for negative in negatives:
-#		B = B+CosineSimilarity()(anchor, nagative)
-#
-#	loss = A/(A+B)
-#
-#	return loss
-#
-#def get_infoNCE(anchors, model, n):
-#	for i in range(anchors.shape[0]):
-#		anchor = anchors[i]
-#		_, positive_indices = get_topk(i,n)
-#		_, negative_indices = get_bottomk(i, n)
-#		positives = [model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True) for data in SIDER[positive_indices]]
-#		negatives = [model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True) for data in SIDER[negative_indices]]
-#		return infoNCE(anchor, positives, negatives )
-
 def get_topk(i,n, device):
 	matrix, indices = torch.topk(SIDER.similarity_matrix.cpu()[i], n)
 	
@@ -134,36 +75,58 @@ def get_infoNCE(data, model, n, device):
 	_,anchors_z = model( data.x.float(),data.edge_index, data.edge_attr, data.smiles, data.batch, False)
 	return infoNCE(anchors_z, positives, negatives, device )
 
+def get_unsupervised_loss(method=None, model = None, data = None, device=None, **kwargs):
+	loss = torch.tensor([0], device = device)
+	if method == 'pi-model':
+		edge_dropout_rate = kwargs['edge_dropout_rate']
+		try:
+			edge_index2, edge_attr2 =  dropout_adj(data.edge_index, data.edge_attr, p = edge_dropout_rate)
 
-def get_loss(data, model, num_pos_neg_samples, device, unsupervised_weight):
+			out2, z2 = model(data.x.float(), edge_index2, edge_attr2, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
+			out2 = out2.view(len(data.y))
+
+			out3, z3 = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, False)# use our own x and edge_attr instead of data.x and data.edge_attr
+			out3 = out3.view(len(data.y))
+			loss = torch.nn.MSELoss()(z2, z3)
+		except Exception as e:
+			print(f"exception:{e}")
+			print(f"smi:{data.smiles} edge_index:{data.edge_index.shape} edge_attr:{data.edge_attr.shape}, p = {edge_dropout_rate}")
+		#edge_index3, edge_attr3 =  dropout_adj(data.edge_index, data.edge_attr, p = edge_dropout_rate)
+		#print(f"edge_index:{edge_index2.shape} edge_attr:{edge_attr2.shape}")
+		#print(f"edge_index:{edge_index3.shape} edge_attr:{edge_attr3.shape}")
+	elif method == 'infonce':
+		num_pos_neg_samples =kwargs['num_pos_neg_samples'] 
+		loss = get_infoNCE(data, model, num_pos_neg_samples, device)
+	else:
+		print('cannot get unsupervised loss!')
+
+	return loss
+
+
+
+def get_loss(method=None, data=None, model=None,  device=None, unsupervised_weight=None, use_SSL = True, **kwargs):
 		total_loss = 0
-		loss = BCELoss_no_NaN(out, data.y)
-		
+		out, z  = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
+		out = out.view(len(data.y))
+		supervised_loss = BCELoss_no_NaN(out, data.y)
+		method= method.lower()
+		methods = {'infonce', 'pi-model'}
+		assert method in methods, 'unsupervised method does not exist!' 
 		# === unsupervised learning
-		if (loss.isnan()):
-			pass
+		if use_SSL == True:
+			unsupervised_loss = get_unsupervised_loss(method = method,  model = model, data = data, device = device,**kwargs ) 
+			total_loss = supervised_loss + unsupervised_weight * unsupervised_loss
 		else:
-			if use_SSL == True:
-				#unsupervised_loss = get_unsupervised_loss(method = 'pi_model', model = model, data = data, target_col = target_col) 
-				unsupervised_loss = get_infoNCE(data, model, 5, device)#get_unsupervised_loss(method = 'pi_model',  model = model, data = data, target_col = target_col, edge_dropout_rate =kwargs['edge_dropout_rate'], device = device) 
-				total_loss = loss + unsupervised_weight * unsupervised_loss
-				#u_loss_lst.append(unsupervised_weight*unsupervised_loss.item())
-				#s_loss_lst.append(loss.item())
-				t_loss_lst.append(total_loss.item())
-				#print(f"u_loss:{unsupervised_weight* unsupervised_loss:8.4f} || s_loss:{loss:8.4f} || t_loss:{total_loss:8.4f} || -- ori_u_loss:{unsupervised_loss:8.4f}  unsupervised_weight:{unsupervised_weight}")
-			else:
-				total_loss = loss.item()
-				
-				#t_loss_lst.append(total_loss.item())
-				#print(f"t_loss:{total_loss}")
+			total_loss = supervised_loss
+			
 		return total_loss
 	
 
-def train(model, data_loader, target_col, unsupervised_weight, device, optimizer, use_SSL=True,  **kwargs):
+def train(method, model, data_loader, target_col, unsupervised_weight, device, optimizer, use_SSL=True,  **kwargs):
 	model.train()
-	u_loss_lst = []
-	s_loss_lst = []
-	t_loss_lst = []
+	unsupervised_loss_lst = []
+	supervised_loss_lst = []
+	total_loss_lst = []
 	for i,  data in enumerate(data_loader):
 
 		# ===replace column y
@@ -186,43 +149,23 @@ def train(model, data_loader, target_col, unsupervised_weight, device, optimizer
 #		else:
 #			supervised_loss = torch.tensor(0)
 
-		out, z  = model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True)# use our own x and edge_attr instead of data.x and data.edge_attr
-		out = out.view(len(data.y))
-		supervised_loss = BCELoss_no_NaN(out, data.y)
-		
-		# === unsupervised learning
-		if (supervised_loss.isnan()):
-			pass
-#			#print("loss is nan")
-#			#print(f"out:\n{out}, data.y[:,target_col]:\n{data.y[:,target_col]} ")
-		else:
-			if use_SSL == True:
-				#unsupervised_loss = get_unsupervised_loss(method = 'pi_model', model = model, data = data, target_col = target_col) 
-				unsupervised_loss = get_infoNCE(data, model, 5, device)#get_unsupervised_loss(method = 'pi_model',  model = model, data = data, target_col = target_col, edge_dropout_rate =kwargs['edge_dropout_rate'], device = device) 
-				total_loss = supervised_loss + unsupervised_weight * unsupervised_loss
-				u_loss_lst.append(unsupervised_weight*unsupervised_loss.item())
-				s_loss_lst.append(supervised_loss.item())
-				t_loss_lst.append(total_loss.item())
-				#print(f"u_loss:{unsupervised_weight* unsupervised_loss:8.4f} || s_loss:{loss:8.4f} || t_loss:{total_loss:8.4f} || -- ori_u_loss:{unsupervised_loss:8.4f}  unsupervised_weight:{unsupervised_weight}")
-			else:
-				total_loss = supervised_loss
-				t_loss_lst.append(total_loss.item())
-				#print(f"t_loss:{total_loss}")
-	
-			total_loss.backward()
-			optimizer.step()
-			optimizer.zero_grad()
+		total_loss = get_loss(method=method,data = data, model = model, device = device, unsupervised_weight = unsupervised_weight, use_SSL=use_SSL, **kwargs)
+
+		total_loss_lst.append(total_loss.item())
+		total_loss.backward()
+		optimizer.step()
+		optimizer.zero_grad()
 
 
 
 	#print(f"---------------------------------------------------------------")
 	if use_SSL == True:		
-		#u_loss = mean(u_loss_lst)
-		#s_loss = mean(s_loss_lst)
-		t_loss = mean(t_loss_lst)
-		#print(f"u_loss:{u_loss:8.4f} || s_loss:{s_loss:8.4f} || t_loss:{t_loss:8.4f}")
+		#unsupervised_loss = mean(unsupervised_loss_lst)
+		#supervised_loss = mean(supervised_loss_lst)
+		total_loss = mean(total_loss_lst)
+		#print(f"unsupervised_loss:{unsupervised_loss:8.4f} || supervised_loss:{supervised_loss:8.4f} || total_loss:{total_loss:8.4f}")
 	else:		
-		t_loss = mean(t_loss_lst)
-		#print(f"t_loss:{t_loss:8.4f}")
+		total_loss = mean(total_loss_lst)
+		#print(f"total_loss:{total_loss:8.4f}")
 	
-	return t_loss
+	return total_loss

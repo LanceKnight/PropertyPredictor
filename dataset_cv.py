@@ -162,7 +162,7 @@ def get_loaders_with_idx(num_extra_data, batch_size, fold, sample_seed = None, t
 
 
 	ori_train_idx = get_idx(fold, 'train_idx')
-	print(f"num_sample:{num_samples}, range {num_samples-NUM_LABELED}, extra:{num_extra_data}")
+	print(f"num_total_samples:{num_samples}, available_unlabled_samples:{num_samples-NUM_LABELED}, num_unlabled_samples_in_use:{num_extra_data}")
 	extra_unlabeled_idx = sample(range(NUM_LABELED, num_samples), num_extra_data)
 	train_idx = ori_train_idx + extra_unlabeled_idx
 	#print(f"extra_unlabled_idx:{extra_unlabeled_idx}")	

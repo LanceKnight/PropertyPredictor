@@ -150,16 +150,48 @@ for param_set_id in range(num_param_sets):
 								 'num_pos_neg_samples' : num_pos_neg_samples
 								}
 
-	for epoch in tqdm(range(num_epochs)):
-		
+	for epoch in tqdm(range(num_epochs)):	
+		# === setting up
 		lr = optimizer.param_groups[0]["lr"]
 		rampup_val = rampup(epoch)
 		unsupervised_weight = rampup_val * w
+
+		# === training
 		train_loss = train(method=method, model = model, data_loader = train_loader,  target_col = col, unsupervised_weight = unsupervised_weight, device = device,  optimizer=optimizer, use_SSL = use_SSL, **unsupervised_param)
 		scheduler.step()
-		train_sc, train_loss2= map(lambda x: round(x,4),test(model= model, data_loader = train_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
-		val_sc, val_loss =   map(lambda x: round(x,4),test(model= model, data_loader = val_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
-		test_sc, test_loss =   map(lambda x: round(x,4),test(model= model, data_loader = test_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+
+		# ===reporting
+		if(use_SSL == True):	# === report unsupervised and supervised loss if using semi-supervised learning
+			train_sc, train_loss2, train_supervised_loss, train_unsupervised_loss= map(lambda x: round(x,4),test(model= model, data_loader = train_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+			val_sc, val_loss,val_supervised_loss, val_unsupervised_loss=   map(lambda x: round(x,4),test(model= model, data_loader = val_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+			test_sc, test_loss, test_supervised_loss, test_unsupervised_loss =   map(lambda x: round(x,4),test(model= model, data_loader = test_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+	
+
+			logger.report_scalar(title=f'supervised loss for param set {param_set_id}', series = 'supervised loss', value =train_supervised_loss,  iteration = epoch)
+			logger.report_scalar(title=f'supervised loss for param set {param_set_id}', series = 'supervised loss', value =val_supervised_loss,  iteration = epoch)
+			logger.report_scalar(title=f'supervised loss for param set {param_set_id}', series = 'supervised loss', value =test_supervised_loss,  iteration = epoch)
+
+			logger.report_scalar(title=f'raw unsupervised loss for param set {param_set_id}', series = 'unsupervised loss', value =train_unsupervised_loss,  iteration = epoch)
+			logger.report_scalar(title=f'raw unsupervised loss for param set {param_set_id}', series = 'unsupervised loss', value =val_unsupervised_loss,  iteration = epoch)
+			logger.report_scalar(title=f'raw unsupervised loss for param set {param_set_id}', series = 'unsupervised loss', value =test_unsupervised_loss,  iteration = epoch)
+		else: # === only report supervised loss if not using semi-supervised learning
+			train_sc, train_loss2= map(lambda x: round(x,4),test(model= model, data_loader = train_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+			val_sc, val_loss =   map(lambda x: round(x,4),test(model= model, data_loader = val_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+			test_sc, test_loss =   map(lambda x: round(x,4),test(model= model, data_loader = test_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+
+
+
+		logger.report_scalar(title=f'total loss for param set {param_set_id}', series = 'train loss', value =train_loss,  iteration = epoch)
+		logger.report_scalar(title=f'total loss for param set {param_set_id}', series = 'train loss2', value =train_loss2,  iteration = epoch)
+		logger.report_scalar(title=f'total loss for param set {param_set_id}', series = 'validation loss', value =val_loss,  iteration = epoch)
+		logger.report_scalar(title=f'total loss for param set {param_set_id}', series = 'test loss', value =test_loss,  iteration = epoch)
+
+		logger.report_scalar(title=f'learning rate for param set {param_set_id}', series = 'learning rate', value =lr,  iteration = epoch)
+		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'training', value =train_sc,  iteration = epoch)
+		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'validation', value =val_sc,  iteration = epoch)
+		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'testing', value =test_sc,  iteration = epoch)
+
+		# ===early stop
 		if val_sc - previous_val_sc <0.0001:
 			patience_count +=1
 			if(patience_count == patience):
@@ -173,15 +205,8 @@ for param_set_id in range(num_param_sets):
 			#print(f"Epoch:{epoch:03d}, train AUC: {train_sc: .4f}   val AUC: {val_sc: .4f}  test_AUC:{test_sc:.4f}")
 		previous_val_sc = val_sc
 
-		logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'train loss', value =train_loss,  iteration = epoch)
-		logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'train loss2', value =train_loss2,  iteration = epoch)
-		logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'validation loss', value =val_loss,  iteration = epoch)
-		logger.report_scalar(title=f'loss for param set {param_set_id}', series = 'test loss', value =test_loss,  iteration = epoch)
 
-		logger.report_scalar(title=f'learning rate for param set {param_set_id}', series = 'learning rate', value =lr,  iteration = epoch)
-		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'training', value =train_sc,  iteration = epoch)
-		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'validation', value =val_sc,  iteration = epoch)
-		logger.report_scalar(title=f'ROC-AUC for param set { param_set_id}', series = 'testing', value =test_sc,  iteration = epoch)
+
 
 	tee_print(f"col:{col}, extra_unlabeled:{num_extra_data}, w:{w}     train_sc:{train_sc:.4f} val_sc:{val_sc:.4f} test AUC: {test_sc:.4f}")
 	record_result(param_set_id, 'train_auc', train_sc)

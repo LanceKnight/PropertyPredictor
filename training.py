@@ -117,6 +117,8 @@ def get_unsupervised_loss(method=None, model = None, data = None, device=None, *
 def get_loss(method=None, data=None, model=None, predicted = None, y = None, device=None, unsupervised_weight=None, use_SSL = True, **kwargs):
 	'''
 	provide either (data, model) or (predicted, y), and return loss
+	if using semi-supervised learning, return total_loss, supervised_loss, raw_unsupervised_loss
+	otherwise, return supervised_loss
 	'''
 	mode = 0 # === 1 for (data, model), 2 for (predicted, y)
 	if((data is None) or (model is None)):
@@ -143,10 +145,11 @@ def get_loss(method=None, data=None, model=None, predicted = None, y = None, dev
 	if use_SSL == True:
 		unsupervised_loss = get_unsupervised_loss(method = method,  model = model, data = data, device = device,**kwargs ) 
 		total_loss = supervised_loss + unsupervised_weight * unsupervised_loss
+		return total_loss, supervised_loss, unsupervised_loss
 	else:
 		total_loss = supervised_loss
+		return total_loss
 		
-	return total_loss
 	
 
 def train(method =None, model=None, data_loader=None, target_col=None, unsupervised_weight=None, device=None, optimizer=None, use_SSL=True,  **kwargs):
@@ -175,24 +178,17 @@ def train(method =None, model=None, data_loader=None, target_col=None, unsupervi
 #			supervised_loss = BCELoss()(out, data.y)
 #		else:
 #			supervised_loss = torch.tensor(0)
-
-		total_loss = get_loss(method=method,data = data, model = model, device = device, unsupervised_weight = unsupervised_weight, use_SSL=use_SSL, **kwargs)
+		
+		if use_SSL:
+			total_loss, _, _ = get_loss(method=method,data = data, model = model, device = device, unsupervised_weight = unsupervised_weight, use_SSL=use_SSL, **kwargs)
+		else:
+			total_loss = get_loss(method=method,data = data, model = model, device = device, unsupervised_weight = unsupervised_weight, use_SSL=use_SSL, **kwargs)
 
 		total_loss_lst.append(total_loss.item())
 		total_loss.backward()
 		optimizer.step()
 		optimizer.zero_grad()
 
-
-
-	#print(f"---------------------------------------------------------------")
-	if use_SSL == True:		
-		#unsupervised_loss = mean(unsupervised_loss_lst)
-		#supervised_loss = mean(supervised_loss_lst)
 		total_loss = mean(total_loss_lst)
-		#print(f"unsupervised_loss:{unsupervised_loss:8.4f} || supervised_loss:{supervised_loss:8.4f} || total_loss:{total_loss:8.4f}")
-	else:		
-		total_loss = mean(total_loss_lst)
-		#print(f"total_loss:{total_loss:8.4f}")
 	
 	return total_loss

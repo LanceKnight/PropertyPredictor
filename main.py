@@ -157,16 +157,17 @@ for param_set_id in range(num_param_sets):
 		rampup_val = rampup(epoch)
 		unsupervised_weight = rampup_val * w
 		# === training
+		print('training...')
 		train_loss_in_progress = train(method=method, model = model, data_loader = train_loader,  target_col = col, unsupervised_weight = unsupervised_weight, device = device,  optimizer=optimizer, use_SSL = use_SSL, **unsupervised_param)
 		scheduler.step()
 		# ===reporting
 		if(use_SSL == True):	# === report unsupervised and supervised loss if using semi-supervised learning
 		
-			print('-----training')	
+			print('-----training sc')	
 			train_sc, train_loss, train_supervised_loss, train_unsupervised_loss= map(lambda x: round(x,4),test(model= model, data_loader = train_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
-			print('----validation')
+			print('----validation sc')
 			val_sc, val_loss,val_supervised_loss, val_unsupervised_loss=   map(lambda x: round(x,4),test(model= model, data_loader = val_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
-			print('---testing')
+			print('---testing sc')
 			test_sc, test_loss, test_supervised_loss, test_unsupervised_loss =   map(lambda x: round(x,4),test(model= model, data_loader = test_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
 	
 

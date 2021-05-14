@@ -7,6 +7,7 @@ from torch_geometric.data import DataLoader
 from torch_geometric.utils import dropout_adj
 from torch_geometric.data import Batch
 
+import numpy as np
 from statistics import mean
 from itertools import compress
 
@@ -49,17 +50,16 @@ def BCELoss_no_NaN(out, target):
 #	return pos_matrix, pos_indices, neg_matrix, neg_indices
 
 def get_topk(i,n):
-	matrix, indices = torch.topk(SIDER.similarity_matrix, n)
+	matrix, indices = torch.topk(SIDER.similarity_matrix.cpu()[i], n)
 	#matrix, indices, _,_ = calculate_top_bottomk_matrix(i, n)
 	return matrix, indices
 
 def get_bottomk(i, n):
-	matrix, indices = torch.topk(-SIDER.similarity_matrix, n)
+	matrix, indices = torch.topk(-SIDER.similarity_matrix.cpu()[i], n)
 	#_, _, matrix, indices =  calculate_top_bottomk_matrix(i, n)	
 	return -matrix, indices
 
 def infoNCE(anchors, positives, negatives, device):
-	#print(f"anchors:{anchors.shape}, positives:{positives.shape}, negatives:{negatives.shape}")
 	anchors = anchors.view(positives.shape[0],1, positives.shape[2])
 	anchors = anchors.expand(positives.shape)
 	cos = CosineSimilarity(dim = 2)
@@ -67,15 +67,6 @@ def infoNCE(anchors, positives, negatives, device):
 	B = torch.mean(cos(anchors, negatives))
 	
 
-#	for i in range(anchors.shape[0]):
-#		positive = positives[i]
-#		#print(f"anchors:{anchors[i].view(1, anchors.shape[1]).shape}, positive:{positive.shape}")
-#		A_list.append(torch.mean(CosineSimilarity()(anchors[i].view(1,anchors.shape[1]), positive)))
-#		negative = negatives[i]
-#		B_list.append(torch.mean(CosineSimilarity()(anchors[i].view(1,anchors.shape[1]), negative)))
-#
-#	A = torch.mean(torch.stack(A_list))
-#	B = torch.mean(torch.stack(B_list))
 	#loss = -torch.log(torch.exp(A)/torch.exp(A+B))
 	A_part = -torch.log(torch.tensor(1/2)*(A+torch.tensor(1)))
 	B_part = -torch.log(torch.tensor(-1/2)*(B+torch.tensor(-1)))
@@ -89,25 +80,28 @@ def get_infoNCE(data, model, n, device):
 	positives = []
 	negatives = []
 	_, positive_indices = get_topk(i, n)
-	#print(f"pos shape:{positive_indices.shape}")
 	_, negative_indices = get_bottomk(i, n)
+
+
 	positive_sampler = BatchSampler(torch.flatten(positive_indices).tolist(), n, drop_last = False)
+	#print(f"pos_sampler:{np.asarray(list(positive_sampler)).shape}")
 	positive_dataloader = DataLoader(SIDER,batch_sampler = positive_sampler)
-	#print(f"pos_sampler:{list(positive_sampler)}")
-	for pos_data in positive_dataloader:
-		#print(f"id:{pos_data.id}")
+	for i, pos_data in enumerate(positive_dataloader):
+		#print(i)
 		pos_data.to(device)
 		_, pos_z=  model(pos_data.x.float(),pos_data.edge_index, pos_data.edge_attr, pos_data.smiles, pos_data.batch, False)
 		positives.append(pos_z)
-	positives = torch.stack(positives) 
+	positives = torch.stack(positives)
+
 	
 	negative_sampler = BatchSampler(torch.flatten(negative_indices).tolist(), n, drop_last = False)
 	negative_dataloader = DataLoader(SIDER,batch_sampler = negative_sampler)
-	for neg_data in negative_dataloader:
+	for i,  neg_data in enumerate(negative_dataloader):
+		#print(i)
 		neg_data.to(device)
 		_, neg_z = model(neg_data.x.float(),neg_data.edge_index, neg_data.edge_attr, neg_data.smiles, neg_data.batch, False)
 		negatives.append(neg_z)
-	negatives =torch.stack(negatives)
+	negatives = torch.stack(negatives)
 	#print(f"anchors1:{anchors}")
 	  
 	#negatives = [model(data.x.float(), data.edge_index, data.edge_attr, data.smiles, data.batch, True) for data in dataset[negative_indices]]
@@ -182,7 +176,7 @@ def get_loss(method=None, data=None, model=None, predicted = None, y = None, dev
 	if use_SSL == True:
 		unsupervised_loss = get_unsupervised_loss(method = method,  model = model, data = data, device = device,**kwargs ) 
 		total_loss = supervised_loss + unsupervised_weight * unsupervised_loss
-		return total_loss, supervised_loss, unsupervised_loss
+		return total_loss, float(supervised_loss), float(unsupervised_loss)
 	else:
 		total_loss = supervised_loss
 		return total_loss

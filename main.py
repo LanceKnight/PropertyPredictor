@@ -105,7 +105,8 @@ for param_set_id in range(num_param_sets):
 
 
 	# load data
-	train_loader, val_loader, test_loader = get_loaders_with_idx(num_extra_data, batch_size, 1)
+	train_loader, val_loader, test_loader = get_loaders(num_extra_data, batch_size, col)
+	#train_loader, val_loader, test_loader = get_loaders_with_idx(num_extra_data, batch_size, 1)
 			
 			
 	is_cuda = torch.cuda.is_available()
@@ -155,15 +156,17 @@ for param_set_id in range(num_param_sets):
 		lr = optimizer.param_groups[0]["lr"]
 		rampup_val = rampup(epoch)
 		unsupervised_weight = rampup_val * w
-
 		# === training
 		train_loss = train(method=method, model = model, data_loader = train_loader,  target_col = col, unsupervised_weight = unsupervised_weight, device = device,  optimizer=optimizer, use_SSL = use_SSL, **unsupervised_param)
 		scheduler.step()
-
 		# ===reporting
 		if(use_SSL == True):	# === report unsupervised and supervised loss if using semi-supervised learning
+		
+			#print('-----training')	
 			train_sc, train_loss2, train_supervised_loss, train_unsupervised_loss= map(lambda x: round(x,4),test(model= model, data_loader = train_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+			#print('----validation')
 			val_sc, val_loss,val_supervised_loss, val_unsupervised_loss=   map(lambda x: round(x,4),test(model= model, data_loader = val_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+			#print('---testing')
 			test_sc, test_loss, test_supervised_loss, test_unsupervised_loss =   map(lambda x: round(x,4),test(model= model, data_loader = test_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
 	
 
@@ -178,7 +181,6 @@ for param_set_id in range(num_param_sets):
 			train_sc, train_loss2= map(lambda x: round(x,4),test(model= model, data_loader = train_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
 			val_sc, val_loss =   map(lambda x: round(x,4),test(model= model, data_loader = val_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
 			test_sc, test_loss =   map(lambda x: round(x,4),test(model= model, data_loader = test_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
-
 
 
 		logger.report_scalar(title=f'total loss for param set {param_set_id}', series = 'train loss', value =train_loss,  iteration = epoch)

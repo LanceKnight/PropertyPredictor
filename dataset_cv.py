@@ -198,6 +198,7 @@ def get_loaders(num_extra_data, batch_size, col):
 	global test_dataset 
 	global train_num
 	
+	print(f"num_total_samples:{num_samples}, available_unlabled_samples:{num_samples-NUM_LABELED}, num_unlabled_samples_in_use:{num_extra_data}")
 	all_idx = [x for x in range(NUM_LABELED)]
 	y = [data.y[:,col] for data in SIDER[0:NUM_LABELED]]
 	ori_train_idx, test_idx = train_test_split(all_idx, test_size = 0.1, stratify = y)

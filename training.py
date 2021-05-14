@@ -19,20 +19,45 @@ def BCELoss_no_NaN(out, target):
 	target_no_NaN = target[~torch.isnan(target)]
 	out = out[~torch.isnan(target)]
 	target_no_NaN = target_no_NaN#target_no_NaN.detach() 
-	return BCELoss()(out, target_no_NaN)
+	loss = BCELoss()(out, target_no_NaN)
+	if(loss is None):
+		print(f"BCEloss:{loss}")
+		print(f"out:\n{out}")
+		print(f"target:\n{target}")
+	return loss
 
-def get_topk(i,n, device):
-	matrix, indices = torch.topk(SIDER.similarity_matrix.cpu()[i], n)
-	
+topk_matrix = None
+topk_indices = None
+bottomk_matrix = None
+bottomk_indices =None
+
+def calculate_top_bottomk_matrix(i, n):
+	global topk_matrix
+	global bottomk_matrix
+	global topk_indices
+	global bottomk_indices
+
+	if topk_matrix is None:
+		print('calculating topk/bottomk matrix...')
+		topk_matrix, topk_indices = torch.topk(SIDER.similarity_matrix, n)
+		bottomk_matrix, bottomk_indices = torch.topk(-SIDER.similarity_matrix, n)
+		print('done!')
+	pos_matrix = topk_matrix[i]
+	pos_indices = topk_indices[i]
+	neg_matrix = bottomk_matrix[i]
+	neg_indices = bottomk_indices[i]
+	return pos_matrix, pos_indices, neg_matrix, neg_indices
+
+def get_topk(i,n):
+	matrix, indices, _,_ = calculate_top_bottomk_matrix(i, n)
 	return matrix, indices
 
-def get_bottomk(i, n, device):
-	matrix, indices = torch.topk(-SIDER.similarity_matrix.cpu()[i], n)
+def get_bottomk(i, n):
+	_, _, matrix, indices =  calculate_top_bottomk_matrix(i, n)	
 	return -matrix, indices
 
 def infoNCE(anchors, positives, negatives, device):
 	#print(f"anchors:{anchors.shape}, positives:{positives.shape}, negatives:{negatives.shape}")
-
 	anchors = anchors.view(positives.shape[0],1, positives.shape[2])
 	anchors = anchors.expand(positives.shape)
 	cos = CosineSimilarity(dim = 2)
@@ -52,21 +77,23 @@ def infoNCE(anchors, positives, negatives, device):
 	#loss = -torch.log(torch.exp(A)/torch.exp(A+B))
 	A_part = -torch.log(torch.tensor(1/2)*(A+torch.tensor(1)))
 	B_part = -torch.log(torch.tensor(-1/2)*(B+torch.tensor(-1)))
-	print(f"A_part:{A_part} B_part:{B_part}")
+	#print(f"A_part:{A_part} B_part:{B_part}")
 	loss =   A_part + B_part
-	print(f"A:{A}, B:{B}, infoNCE loss:{loss}")
+	#print(f"A:{A}, B:{B}, infoNCE loss:{loss}")
 	return loss
 
 def get_infoNCE(data, model, n, device):
-	#for i in range(anchors.shape[0]):
 	i = data.id
 	positives = []
 	negatives = []
-	_, positive_indices = get_topk(i, n, device)
-	_, negative_indices = get_bottomk(i, n, device)
+	_, positive_indices = get_topk(i, n)
+	#print(f"pos shape:{positive_indices.shape}")
+	_, negative_indices = get_bottomk(i, n)
 	positive_sampler = BatchSampler(torch.flatten(positive_indices).tolist(), n, drop_last = False)
 	positive_dataloader = DataLoader(SIDER,batch_sampler = positive_sampler)
+	#print(f"pos_sampler:{list(positive_sampler)}")
 	for pos_data in positive_dataloader:
+		#print(f"id:{pos_data.id}")
 		pos_data.to(device)
 		_, pos_z=  model(pos_data.x.float(),pos_data.edge_index, pos_data.edge_attr, pos_data.smiles, pos_data.batch, False)
 		positives.append(pos_z)
@@ -86,6 +113,8 @@ def get_infoNCE(data, model, n, device):
 	return infoNCE(anchors_z, positives, negatives, device )
 
 def get_unsupervised_loss(method=None, model = None, data = None, device=None, **kwargs):
+
+	#print(data)
 	loss = torch.tensor([0], device = device)
 	if method == 'pi-model':
 		edge_dropout_rate = kwargs['edge_dropout_rate']
@@ -135,9 +164,15 @@ def get_loss(method=None, data=None, model=None, predicted = None, y = None, dev
 	elif(mode ==2):# ===if provided (predicted, y) as well
 		out, z = predicted
 
-	total_loss = 0
+	total_loss = torch.tensor(0)
 	out = out.view(len(y))
-	supervised_loss = BCELoss_no_NaN(out, y)
+
+	#===filter out data that contains only nan
+	if( not torch.all( torch.isnan(data.y))):
+		supervised_loss = BCELoss_no_NaN(out, y)
+	else:
+		#print(y)
+		supervised_loss = torch.tensor(0)
 	method= method.lower()
 	methods = {'infonce', 'pi-model'}
 	assert method in methods, 'unsupervised method does not exist!' 
@@ -158,12 +193,14 @@ def train(method =None, model=None, data_loader=None, target_col=None, unsupervi
 	supervised_loss_lst = []
 	total_loss_lst = []
 	for i,  data in enumerate(data_loader):
-
 		# ===replace column y
 		data.y = data.y[:,target_col]
 		data.to(device)
-	
 		#print(f"smi:{data.smiles}\nx:\n{data.x}\n edge_index:\n{data.edge_index}\n edge_attr:{data.edge_attr}")
+			
+
+
+
 		# === filter out data that does not have y label (i.e. y label is Nan)
 #		data_lst = data.to_data_list()#~torch.isnan(data.y)]
 #		data_lst = list(compress(data_lst, list(~torch.isnan(data.y).cpu().numpy())))
@@ -180,9 +217,15 @@ def train(method =None, model=None, data_loader=None, target_col=None, unsupervi
 #			supervised_loss = torch.tensor(0)
 		
 		if use_SSL:
-			total_loss, _, _ = get_loss(method=method,data = data, model = model, device = device, unsupervised_weight = unsupervised_weight, use_SSL=use_SSL, **kwargs)
+			total_loss, supervised_loss, unsupervised_loss = get_loss(method=method,data = data, model = model, device = device, unsupervised_weight = unsupervised_weight, use_SSL=use_SSL, **kwargs)
+
+			#if (supervised_loss<=0) or (torch.isnan(supervised_loss)):
+			#	print(f"train_loss<=0: total_loss:{total_loss}, supervised_loss:{supervised_loss}, unsupervised_loss:{unsupervised_loss}  data:{data}")
+			#	print(f"data.y:{data.y}")
 		else:
 			total_loss = get_loss(method=method,data = data, model = model, device = device, unsupervised_weight = unsupervised_weight, use_SSL=use_SSL, **kwargs)
+
+
 
 		total_loss_lst.append(total_loss.item())
 		total_loss.backward()
@@ -190,5 +233,4 @@ def train(method =None, model=None, data_loader=None, target_col=None, unsupervi
 		optimizer.zero_grad()
 
 		total_loss = mean(total_loss_lst)
-	
 	return total_loss

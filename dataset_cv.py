@@ -36,26 +36,19 @@ from molecule_processing import smiles2graph
 
 
 class Sider(InMemoryDataset):
-	names = {
-		'sider':'ori_sider',
-		'sider_toxcast':'sider_toxcast',
-		'sider_toxcast_tox21':'sider_toxcast_tox21',
-		'sider_toxcast_tox21_pcba':'sider_toxcast_tox21_pbca',
-		'sider_pcba':'sider_pbca'
-	}
 
 	def __init__(self, root, name, transform=None, pre_transform=None, pre_filter=None):
+		self.name = name
+		#assert self.name in self.names.keys(), 'dataset name does not exist!'
 		super(Sider, self).__init__(root, transform, pre_transform, pre_filter=None)
-		self.name = name.lower()
-		assert self.name in self.names.keys()
 		self.data, self.slices = torch.load(self.processed_paths[0])
-		self.similarity_matrix = torch.load(self.processed_paths[1])		
+		self.similarity_matrix = torch.load(self.processed_paths[1])	
 	@property
 	def raw_file_names(self):
-		return 'sider.csv'#f'{self.names[self.name]}.csv'#
+		return f'{self.name}.csv'#'sider.csv'#
 	@property
 	def processed_file_names(self):
-		return ['data.pt', 'similarity.pt']
+		return [f'data-{self.name}.pt', f'similarity-{self.name}.pt']
 	
 	@property
 	def raw_dir(self):
@@ -121,9 +114,17 @@ class Sider(InMemoryDataset):
 			torch.save(self.similarity_matrix, self.processed_paths[1])
 		#print(self.similarity_matrix)	
 
+names = {
+	1:'ori_sider',
+	2:'sider_toxcast',
+	3:'sider_toxcast_tox21',
+	4:'sider_toxcast_tox21_pbca',
+	5:'sider_pcba',
+	6:'sider_twenty_lines_toxcast'
+}
 
 #SIDER = MoleculeNet(root = "data/SIDER", name = "SIDER")
-SIDER = Sider(root = "data/SIDER/sider", name = 'sider_pcba')
+SIDER = Sider(root = "data/SIDER/sider", name = names[2])
 #print(type(SIDER.similarity_matrix))
 #SIDER = MoleculeNet(root = "/home/liuy69/.clearml/venvs-builds/3.6/task_repository/PropertyPredictor.git/side_effect/final_model/data", name = "SIDER")# This is a combined dataset, the first 1427 samples are labeld from SIDER. Then 8597 sampes from ToxCast (19 of them were discarded due to the failure to convert to mol), 7831 samples were from Tox21. The total number of samples are 1427+8597+7831-19 = 17836
 
@@ -190,7 +191,7 @@ def get_loaders_with_idx(num_extra_data, batch_size, fold, sample_seed = 1, torc
 	return train_loader, val_loader, test_loader
 
 
-def get_loaders(num_extra_data, batch_size):
+def get_loaders(num_extra_data, batch_size, col):
 	# === 8:1:1 random split
 	global train_dataset
 	global val_dataset
@@ -198,8 +199,10 @@ def get_loaders(num_extra_data, batch_size):
 	global train_num
 	
 	all_idx = [x for x in range(NUM_LABELED)]
-	ori_train_idx, test_idx = train_test_split(all_idx, test_size = 0.1)
-	ori_train_idx, val_idx = train_test_split(ori_train_idx, test_size = 1.0/9)
+	y = [data.y[:,col] for data in SIDER[0:NUM_LABELED]]
+	ori_train_idx, test_idx = train_test_split(all_idx, test_size = 0.1, stratify = y)
+	y2 = [y[i] for i in ori_train_idx]
+	ori_train_idx, val_idx = train_test_split(ori_train_idx, test_size = 1.0/9, stratify = y2)
 	extra_unlabeled_idx = sample(range(NUM_LABELED, num_samples), num_extra_data)
 	train_idx = ori_train_idx + extra_unlabeled_idx
 	ori_train_num = len(ori_train_idx)

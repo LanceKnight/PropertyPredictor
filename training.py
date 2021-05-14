@@ -26,34 +26,36 @@ def BCELoss_no_NaN(out, target):
 		print(f"target:\n{target}")
 	return loss
 
-topk_matrix = None
-topk_indices = None
-bottomk_matrix = None
-bottomk_indices =None
+#topk_matrix = None
+#topk_indices = None
+#bottomk_matrix = None
+#bottomk_indices =None
 
-def calculate_top_bottomk_matrix(i, n):
-	global topk_matrix
-	global bottomk_matrix
-	global topk_indices
-	global bottomk_indices
-
-	if topk_matrix is None:
-		print('calculating topk/bottomk matrix...')
-		topk_matrix, topk_indices = torch.topk(SIDER.similarity_matrix, n)
-		bottomk_matrix, bottomk_indices = torch.topk(-SIDER.similarity_matrix, n)
-		print('done!')
-	pos_matrix = topk_matrix[i]
-	pos_indices = topk_indices[i]
-	neg_matrix = bottomk_matrix[i]
-	neg_indices = bottomk_indices[i]
-	return pos_matrix, pos_indices, neg_matrix, neg_indices
+#def calculate_top_bottomk_matrix(i, n):
+#	global topk_matrix
+#	global bottomk_matrix
+#	global topk_indices
+#	global bottomk_indices
+#
+#	if topk_matrix is None:
+#		print('calculating topk/bottomk matrix...')
+#		topk_matrix, topk_indices = torch.topk(SIDER.similarity_matrix, n)
+#		bottomk_matrix, bottomk_indices = torch.topk(-SIDER.similarity_matrix, n)
+#		print('done!')
+#	pos_matrix = topk_matrix[i]
+#	pos_indices = topk_indices[i]
+#	neg_matrix = bottomk_matrix[i]
+#	neg_indices = bottomk_indices[i]
+#	return pos_matrix, pos_indices, neg_matrix, neg_indices
 
 def get_topk(i,n):
-	matrix, indices, _,_ = calculate_top_bottomk_matrix(i, n)
+	matrix, indices = torch.topk(SIDER.similarity_matrix, n)
+	#matrix, indices, _,_ = calculate_top_bottomk_matrix(i, n)
 	return matrix, indices
 
 def get_bottomk(i, n):
-	_, _, matrix, indices =  calculate_top_bottomk_matrix(i, n)	
+	matrix, indices = torch.topk(-SIDER.similarity_matrix, n)
+	#_, _, matrix, indices =  calculate_top_bottomk_matrix(i, n)	
 	return -matrix, indices
 
 def infoNCE(anchors, positives, negatives, device):

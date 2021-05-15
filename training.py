@@ -86,13 +86,16 @@ def get_infoNCE(data, model, n, device):
 	positive_sampler = BatchSampler(torch.flatten(positive_indices).tolist(), n, drop_last = False)
 	#print(f"pos_sampler:{np.asarray(list(positive_sampler)).shape}")
 	positive_dataloader = DataLoader(SIDER,batch_sampler = positive_sampler)
+	#print('positive_dataloader done')
+	del positive_sampler
 	for i, pos_data in enumerate(positive_dataloader):
 		#print(i)
 		pos_data.to(device)
 		_, pos_z=  model(pos_data.x.float(),pos_data.edge_index, pos_data.edge_attr, pos_data.smiles, pos_data.batch, False)
 		positives.append(pos_z)
+	#print('before stack')
 	positives = torch.stack(positives)
-
+	#print('after stack')
 	
 	negative_sampler = BatchSampler(torch.flatten(negative_indices).tolist(), n, drop_last = False)
 	negative_dataloader = DataLoader(SIDER,batch_sampler = negative_sampler)

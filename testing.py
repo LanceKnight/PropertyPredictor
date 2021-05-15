@@ -45,7 +45,7 @@ def test(model=None, data_loader=None,  target_col=None, device=None, method = N
 		else:
 			loss = float(get_loss(method= method, data = data, model= model, predicted = (out,z),y = y, device = device, use_SSL=use_SSL, unsupervised_weight = unsupervised_weight, **kwargs))
 
-		loss_lst.append(loss.item())
+		loss_lst.append(loss)
 		#==========convert to numpy array
 		out = out.view(len(out))	
 		out = out.cpu().detach().numpy()

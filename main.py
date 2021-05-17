@@ -179,7 +179,7 @@ for param_set_id in range(num_param_sets):
 			logger.report_scalar(title=f'raw unsupervised loss for param set {param_set_id}', series = 'validation unsupervised loss', value =val_unsupervised_loss,  iteration = epoch)
 			logger.report_scalar(title=f'raw unsupervised loss for param set {param_set_id}', series = 'test unsupervised loss', value =test_unsupervised_loss,  iteration = epoch)
 		else: # === only report supervised loss if not using semi-supervised learning
-			train_sc, train_loss2= map(lambda x: round(x,4),test(model= model, data_loader = train_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
+			train_sc, train_loss= map(lambda x: round(x,4),test(model= model, data_loader = train_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
 			val_sc, val_loss =   map(lambda x: round(x,4),test(model= model, data_loader = val_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
 			test_sc, test_loss =   map(lambda x: round(x,4),test(model= model, data_loader = test_loader,  target_col =col, device = device, method = method, unsupervised_weight = unsupervised_weight, use_SSL = use_SSL, **unsupervised_param))
 

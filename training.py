@@ -190,7 +190,7 @@ def train(method =None, model=None, data_loader=None, target_col=None, unsupervi
 	model.train()
 	unsupervised_loss_lst = []
 	supervised_loss_lst = []
-	total_loss_lst = []
+	#total_loss_lst = []
 	for i,  data in enumerate(data_loader):
 		# ===replace column y
 		data.y = data.y[:,target_col]
@@ -226,10 +226,10 @@ def train(method =None, model=None, data_loader=None, target_col=None, unsupervi
 
 
 
-		total_loss_lst.append(total_loss.item())
+		#total_loss_lst.append(total_loss.item())
 		total_loss.backward()
 		optimizer.step()
 		optimizer.zero_grad()
 
-		total_loss = mean(total_loss_lst)
-	return total_loss
+		#total_loss = mean(total_loss_lst)
+	return #total_loss
